@@ -1,3 +1,4 @@
+; builtins_extended.ahk
 
 Class __Float extends Float {
     static __New() {
@@ -159,6 +160,14 @@ Class __String extends String {
         Return this.Sub((-1) * _chars.Length(), _chars.Length()) == _chars
     }
 
+    Lower() {
+        return StrLower(this)
+    }
+
+    Upper() {
+        return StrUpper(this)
+    }
+
     Replace(_re_needle, _replacement:='', &_cnt:=(-1), _starting_pos?) {
         repl_args := [
             this,
@@ -172,81 +181,3 @@ Class __String extends String {
         return RegExReplace(repl_args*)
     }
 }
-
-
-TrayTip.Quik := (_this, _title := '', _msg := '', _dur := 3000) => (
-    TrayTip(_msg, _title, 0x20),
-    SetTimer((*) => TrayTip(), (-1) * Abs(_dur)))
-
-
-; Class __BuiltinClassExtension {
-;     Static __TargetClass := "unset"
-;     Static __New() {
-;         cls := this.__TargetClass
-;         if cls != "unset"
-;             for _prop in this.Prototype.OwnProps()
-;                 if SubStr(_prop, 1, 1) != "_"
-;                     cls.Prototype.%_prop% := this.Prototype.%_prop%
-;
-;     }
-; }
-
-; Class __BuiltinClassExtension {
-;     Static __New() {
-;         clsproto := this.Prototype.__Class
-;         clsname := SubStr(clsproto, 3)
-;         if clsproto ~= "^[^_]{1,2}|__BuiltinClassExtension"
-;             Return
-;         cls := %clsname%
-;         for _prop in this.Prototype.OwnProps()
-;             if SubStr(_prop, 1, 2) != "__"
-;                 cls.Prototype.%_prop% := this.Prototype.%_prop%
-;     }
-; }
-
-; __BuiltinClassExt__New(_This) {
-;     cls := %(_This.Base.Prototype.__Class)%
-;     for _prop in ObjOwnProps(_This.Prototype)
-;         if SubStr(_prop, 1, 2) != "__"
-;             cls.Prototype.%_prop% := _This.Prototype.%_prop%
-; }
-
-
-
-; /**
-;  * @class __Array
-;  * @extends {Array|__BuiltinClassExtension}
-;  */
-; Class __Array extends __BuiltinClassExtension {
-;     /** @extends {Array} */
-
-;     ; Static __TargetClass := Array
-;     ; Static __New() {
-;     ;     for k in this.Prototype.OwnProps()
-;     ;         if SubStr(k, 1, 1) != "_"
-;     ;             Array.Prototype.%k% := this.Prototype.%k%
-;     ; }
-
-;     Reverse() {
-;         new_array := []
-;         Loop this.Length
-;             new_array.Push(this[this.Length-A_Index + 1])
-;         return new_array
-;     }
-
-;     IndexOf(_value) {
-;         _found := False
-;         for _i, _v in this
-;             if _v = _value
-;                 _found := _i
-;         return _found
-;     }
-
-;     PushPass(_values*) {
-;         this.Push(_values*)
-;         Return this[this.Length]
-;     }
-; }
-
-
-

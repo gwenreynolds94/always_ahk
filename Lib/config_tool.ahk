@@ -1,3 +1,4 @@
+; config_tool.ahk
 
 #Requires AutoHotkey v2.0
 #Warn All, StdOut
@@ -6,7 +7,7 @@
 #Include config_tool.ahk
 
 if (A_LineFile = A_ScriptFullPath) {
-    test_conf := TestConf("C:\Users\" A_UserName "\.test_conf",
+    test_config := test_conf("C:\Users\" A_UserName "\.test_conf",
         Map(
             "SectA", Map(
                 "A", "Aye",
@@ -20,13 +21,13 @@ if (A_LineFile = A_ScriptFullPath) {
             )
         )
     )
-    test_conf.Validate()
+    test_config.validate()
     ; using .Ini ;
-    test_conf.Ini.SectNew.A := "AyeAgain"
-    test_conf.Ini.SectNew.B := "BeeAgain"
+    test_config.ini.SectNew.A := "AyeAgain"
+    test_config.ini.SectNew.B := "BeeAgain"
     ; using extended class 'shortcut' props
-    test_conf.SectNew.C := "SeeAgain!"
-    test_conf.KeyAB := "AyeBeeNew"
+    test_config.SectNew.C := "SeeAgain!"
+    test_config.KeyAB := "AyeBeeNew"
 }
 
 /**
@@ -34,7 +35,7 @@ if (A_LineFile = A_ScriptFullPath) {
  * specific sections. To define shortcuts to specific keys, you have
  * to define both `get` and `set` methods
  */
-Class TestConf extends ConfTool {
+Class test_conf extends conf_tool {
     SectA => this.Ini.SectA
     SectB => this.Ini.SectB
     SectNew => this.Ini.SectNew
@@ -59,7 +60,7 @@ Class TestConf extends ConfTool {
  * Finally, the SectionEdit class provides a graphical interface for editing
  * a particular section of the file.
  */
-Class ConfTool {
+Class conf_tool {
 
     /**
      * @param {String} fpath 
@@ -96,14 +97,14 @@ Class ConfTool {
         this.defaults := _defaults ? _defaults : this.defaults
     }
 
-    Validate() {
+    validate() {
         retval := ""
-        CreateDefaultFile() {
+        create_default_file() {
             for _sectname, _sect in this.defaults
                 for _keyname, _keyvalue in _sect
-                    this.Ini.%_sectname%.%_keyname% := _keyvalue
+                    this.ini.%_sectname%.%_keyname% := _keyvalue
         }
-        CheckKeys() {
+        check_keys() {
             for _sectname, _sectmeat in this.defaults {
                 section_keys := []
                 Loop Parse, IniRead(this.fpath, _sectname), "`n", "`r" {
@@ -112,67 +113,67 @@ Class ConfTool {
                 }
                 for _keyname, _keyvalue in _sectmeat
                     if not section_keys.IndexOf(_keyname)
-                        this.Ini.%_sectname%.%_keyname% := _keyvalue
+                        this.ini.%_sectname%.%_keyname% := _keyvalue
             }
         }
         if FileExist(this.fpath) {
-            CheckKeys()
+            check_keys()
             return "exists"
         }
         SplitPath this.fpath, &_fname, &_fdir
         _fdir := _fdir ? _fdir : "."
         if DirExist(_fdir) {
-            CreateDefaultFile()
+            create_default_file()
             return "file"
         } else {
             SplitPath _fdir, &_dname, &_ddir
             _ddir := _ddir ? _ddir : "."
             if DirExist(_ddir) {
                 DirCreate(_fdir)
-                CreateDefaultFile()
+                create_default_file()
                 return "dir"
             } else return ""
         }
     }
 
-    Ini {
-        Get {
-            ConfTool.SettingSection.CurrentFilePath := this.fpath
-            Return ConfTool.SettingSection()
+    ini {
+        get {
+            conf_tool.setting_section.current_file_path := this.fpath
+            Return conf_tool.setting_section()
         }
     }
 
-    Class Setting {
-        Static CurrentSection := "",
-               CurrentFilePath := ""
+    Class setting {
+        Static current_section := "",
+               current_file_path := ""
 
-        __Get(Key, Params) {
-            Return IniRead(ConfTool.Setting.CurrentFilePath,
-                            ConfTool.Setting.CurrentSection, Key, "")
+        __get(Key, Params) {
+            Return IniRead(conf_tool.setting.current_file_path,
+                            conf_tool.setting.current_section, Key, "")
         }
 
-        __Set(Key, Params, Value) {
-            IniWrite(Value, ConfTool.Setting.CurrentFilePath,
-                            ConfTool.Setting.CurrentSection, Key)
+        __set(Key, Params, Value) {
+            IniWrite(Value, conf_tool.setting.current_file_path,
+                            conf_tool.setting.current_section, Key)
         }
     }
 
-    Class SettingSection {
-        Static CurrentFilePath := ""
+    Class setting_section {
+        Static current_file_path := ""
 
-        __Get(Key, Params) {
-            ConfTool.Setting.CurrentFilePath :=
-                ConfTool.SettingSection.CurrentFilePath
-            ConfTool.Setting.CurrentSection := Key
-            Return ConfTool.Setting()
+        __get(Key, Params) {
+            conf_tool.setting.current_file_path :=
+                conf_tool.setting_section.current_file_path
+            conf_tool.setting.current_section := Key
+            Return conf_tool.setting()
         }
 
-        __Set(Key, Params, Value) {
+        __set(Key, Params, Value) {
             Return
         }
     }
 
-    Class SectionEdit {
+    Class section_edit {
 
         /**
          * @prop {ConfTool} _conftool instance of ConfTool to edit
@@ -231,27 +232,27 @@ Class ConfTool {
             this._value_type := _value_type
             this.methbound.show := ObjBindMethod(this, "Show")
             this.methbound.hide := ObjBindMethod(this, "Hide")
-            this.SetupGui()
+            this.setup_gui()
         }
 
         /**
          *
          */
-        SetupGui() {
+        setup_gui() {
             this._gui := Gui("+AlwaysOnTop", "Edit" this._section "Gui", this)
-            this.UpdateContent()
+            this.update_content()
             for _key, _value in this._content {
                 if this._value_type ~= "bool" {
                     this._guictrls[_key] :=
                         this._gui.AddCheckbox("xp+0 y+10 w" this._item_width, _key)
                     this._guictrls[_key].Value := _value
-                    this._guictrls[_key].OnEvent("Click", "CheckBox_OnClick")
+                    this._guictrls[_key].OnEvent("Click", "checkbox_on_click")
                 }
             }
 
             this._gui_exit_btn :=
                 this._gui.AddButton("xp+0 y+10 w" this._item_width, "Close")
-            this._gui_exit_btn.OnEvent("Click", "ExitButton_OnClick")
+            this._gui_exit_btn.OnEvent("Click", "exit_btn_on_click")
 
             /** 
              * @var {Menu} _tray 
@@ -263,7 +264,7 @@ Class ConfTool {
         /**
          *
          */
-        UpdateContent() {
+        update_content() {
             this._content.Clear()
             Loop Parse, IniRead(this._conftool.fpath, this._section), "`n", "`r" {
                 RegExMatch A_LoopField, "([^=]+)=(.+)", &_re_match
@@ -274,30 +275,31 @@ Class ConfTool {
         /**
          *
          */
-        ExitButton_OnClick(*) {
-            this.Hide()
+        exit_btn_on_click(*) {
+            this.hide()
         }
 
         /** 
          * @param {Gui.Control} _guictrl 
          */
-        CheckBox_OnClick(_guictrl, *) {
-            this._conftool.Ini.%(this._section)%.%(_guictrl.Text)% := _guictrl.Value
+        checkbox_on_click(_guictrl, *) {
+            this._conftool.ini.%(this._section)%.%(_guictrl.Text)% := _guictrl.Value
         }
+
+        show => this._gui.Show
+
+        hide => this._gui.Hide
 
         /**
          *
-         */
         Show(*) {
             this._gui.Show()
         }
 
-        /**
-         *
-         */
         Hide(*) {
             this._gui.Hide()
         }
+         */
 
     }
 
