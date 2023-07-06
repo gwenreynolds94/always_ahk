@@ -4,7 +4,8 @@
 #Warn All, StdOut
 #SingleInstance Force
 
-#Include bultins_extended.ahk
+#Include builtins_extended.ahk
+#Include quiktip.ahk
 
 class winwiz {
 
@@ -23,14 +24,18 @@ class winwiz {
                 "processname", [],
                 "title", []
             )
-         , methbinds := {
+         , bm := {
                 loopwindows: {},
-                cyclewindows: {}
+                cyclewindows: {},
+                searchv2docs: {},
+                winkillclass: {}
             }
 
     static __new() {
-        this.methbinds.cyclewindows := objbindmethod(this, "cyclewindows")
-        this.methbinds.loopwindows := objbindmethod(this, "loopwindows")
+        this.bm.cyclewindows := objbindmethod(this, "cyclewindows")
+        this.bm.loopwindows := objbindmethod(this, "loopwindows")
+        this.bm.searchv2docs := objbindmethod(this, "searchv2docs")
+        this.bm.winkillclass := objbindmethod(this, "winkillclass")
     }
 
     static _debug_wintitles(_wlist*) {
@@ -112,13 +117,20 @@ class winwiz {
         return true
     }
 
+    static winkillclass(_wintitle:="", _waitfor:=2) {
+        winhwnd := winexist(_wintitle or "A")
+        winclass := wingetclass(winhwnd)
+        for _win in (classlist:=this.winlist["ahk_class " winclass])
+            winclose _win,, _waitfor
+        quiktray("death total: " classlist.length, "[ " winclass " ]", 3333)
+    }
+
     static insertafter(_wtitlea, _wtitleb:="") {
         static setwinpos := winwiz.dll.setwindowpos, SWP := setwinpos.SWP, HWND_ := setwinpos.HWND
         w_a := !!winexist(_wtitlea) ? _wtitlea : false
         w_b := !!winexist(_wtitleb) ? _wtitleb : false
         if not ( w_a and w_b )
             return false
-        
     }
 
     /**
@@ -147,6 +159,25 @@ class winwiz {
                 _zoffset := windows.Length - _zoffset + 1
             return windows[_zoffset]
         }
+    }
+
+    static searchv2docs(_searchterm:=false, _newwindow:=false, *) {
+        wintitle := "AutoHotkey v2 Help ahk_exe hh.exe"
+        if !winexist(wintitle) or _newwindow {
+            run '"C:\Program Files\AutoHotkey\v2.0.2\AutoHotkey.chm"',,, &_hhpid
+            _found := winwait("ahk_pid" _hhpid,, 5)
+        } else _found := true
+        if not _found
+            return
+        winactivate _newwindow and _found or wintitle
+        winwaitactive wintitle
+        send "{LAlt Down}s{LAlt Up}"
+        sleep 30
+        send "{LCtrl Down}a{LCtrl Up}"
+        sleep 30
+        send ("{Raw}" (type(_searchterm) = "string" and _searchterm or string(A_Clipboard)))
+        sleep 30
+        send "{Enter}"
     }
 
     class dll {

@@ -10,7 +10,7 @@ outputdebug "
     |>|>|>|>|>__always_ahk__|>|>|>|>|>__starting__|>|>|>|>|>
 )"
 
-#Include <bultins_extended>
+#Include <builtins_extended>
 #Include <config_tool>
 #Include <winwiz>
 #Include <kitable>
@@ -96,20 +96,17 @@ class gen {
         kt := this.kt := kitable()
 
 
-        kt.hotki("$+CapsLock", "{CapsLock}")
-        kt.hotki("XButton2 & LButton", winwiz.methbinds.loopwindows.bind(false, "", false))
-        kt.hotki("XButton2 & RButton", winwiz.methbinds.loopwindows.bind(true, "", false))
+        kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false))
+        kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false))
         kt.hotki("XButton2 & MButton", ((*)=>(winactivate(twin:=winwiz.winfromzoffset[4]))))
         kt.hotki("$XButton2", "{XButton2}")
         kt.dblki("$XButton1", quiktool.call.bind(quiktool, "dbl", {}, 2250), 200, ((*)=>send("{XButton1}")))
 
         kl := this.kl := kileader("CapsLock")
-        kl.hotki("w", wez.kt.methbinds.toggle)
-        kl.pathki(["a", "h", "h"], (*)=>(
-                    run('"C:\Program Files\AutoHotkey\v2.0.2\AutoHotkey.chm"'),
-                    WinWaitActive("ahk_exe hh.exe"), Send("{LAlt Down}s{LAlt Up}"),
-                    sleep(30), Send("{Raw}" A_Clipboard), Send("{Enter}")
-                 ))
+        kl.hotki("w", wez.kt.bm.toggle)
+        kl.pathki(["a", "h", "h"], winwiz.bm.searchv2docs.bind(0, 0))
+        kl.pathki(["a", "h", "+h"], winwiz.bm.searchv2docs.bind(0, 1))
+        kl.pathki(["k", "l", "l"], winwiz.bm.winkillclass.bind("", 2))
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
 ;        kl.focuski(["f", "f", "x"], "ahk_exe firefox.exe")
@@ -134,13 +131,15 @@ class wez {
 
         kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
         kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        kt.hotki("XButton2 & LButton", winwiz.methbinds.loopwindows.bind(false, this.wintitle, false))
-        kt.hotki("XButton2 & RButton", winwiz.methbinds.loopwindows.bind(true, this.wintitle, false))
+        kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, this.wintitle, false))
+        kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, false))
+        kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}", 300, "{Ctrl Down}[{Ctrl Up}:")
 
         kt.hotki("AppsKey", "{F13}")
+        kt.hotki("!CapsLock", "{F13}")
 
         kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
-        kl.hotki("RCtrl", winwiz.methbinds.loopwindows.bind(true, this.wintitle, false))
+        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false))
     }
 }
 

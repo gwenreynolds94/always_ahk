@@ -26,7 +26,7 @@ class volctrl {
         ,  sound_disabled_color := "c502d2d"
         ,  progress_colors := { enabled : "c862d2d", disabled: "c502d2d" }
         ,  seed := 0
-        ,  methbinds := {hide:{},decrease:{},increase:{}}
+        ,  bm := {hide:{},decrease:{},increase:{}}
         ,  timeout := 2000
         ,  delta_volume := 2
         ,  _wheel_hotif_ := false
@@ -45,9 +45,9 @@ class volctrl {
                                                    this.sound_enabled_color )
         this.update_progress
         this.update_color
-        this.methbinds.hide := ObjBindMethod(this, "hide")
-        this.methbinds.decrease := ObjBindMethod(this, "decrease")
-        this.methbinds.increase := ObjBindMethod(this, "increase")
+        this.bm.hide := ObjBindMethod(this, "hide")
+        this.bm.decrease := ObjBindMethod(this, "decrease")
+        this.bm.increase := ObjBindMethod(this, "increase")
     }
 
     static wheel_enabled {
@@ -64,8 +64,8 @@ class volctrl {
     static enable_wheel(*) {
         hotwhlif := this._wheel_hotif_
         hotif hotwhlif
-        hotkey "WheelDown", this.methbinds.decrease
-        hotkey "WheelUp", this.methbinds.increase
+        hotkey "WheelDown", this.bm.decrease
+        hotkey "WheelUp", this.bm.increase
         hotif
     }
 
@@ -89,7 +89,7 @@ class volctrl {
             this.initialized := true
             this._hidden_ := false
         }
-        settimer this.methbinds.hide, Abs(this.timeout) * (-1)
+        settimer this.bm.hide, Abs(this.timeout) * (-1)
     }
 
     static hide(*) {

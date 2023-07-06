@@ -4,7 +4,7 @@
 #SingleInstance Force
 
 #Include .\DEBUG\jk_debug.ahk
-#Include .\bultins_extended.ahk
+#Include .\builtins_extended.ahk
 
 class kitable extends Map {
     

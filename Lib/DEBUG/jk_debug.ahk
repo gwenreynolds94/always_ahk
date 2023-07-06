@@ -4,7 +4,7 @@
 #Warn All, StdOut
 #SingleInstance Force
 
-#Include ..\bultins_extended.ahk
+#Include ..\builtins_extended.ahk
 #Include ..\quiktip.ahk
 
 class ___DBG___ {
