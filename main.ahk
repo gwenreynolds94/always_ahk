@@ -1,19 +1,28 @@
 ; main.ahk
 
 #Requires AutoHotkey v2.0
-#Warn All, StdOut
+#Warn All, OutputDebug
+#Warn LocalSameAsGlobal, OutputDebug
 #SingleInstance Force
 
 outputdebug "
 (ltrim
-    
+    |>|>|>|>|>__always_ahk__|>|>|>|>|>__starting__|>|>|>|>|>
 )"
+
 #Include <bultins_extended>
 #Include <config_tool>
 #Include <winwiz>
 #Include <kitable>
 #Include <quiktip>
 #Include <volctrl>
+
+
+exitaction(_exit_reason:="", *) {
+    quiktray _exit_reason "ing...", "<always_ahk.main>", 1750
+    sleep 1750
+} onexit exitaction
+
 
 Class __always_config extends conf_tool {
     /**
@@ -72,115 +81,114 @@ class fuck_cortana {
 }
 
 class gen {
-    static ki := {}
-        , methbinds := {
-            cycle: {}
-        }
+           /**
+            * @prop {kitable} kt
+            */
+    static kt := {},
+           /**
+            * @prop {kileader} kl
+            */
+           kl := {}
 
     static __new() {
 
-        ki := this.ki := kitable()
 
-        ki.methbinds.cycle := objbindmethod(this, "wincycle")
-        ki.bind("$+CapsLock", "{CapsLock}")
-        ki.bind("XButton1 & MButton", winwiz.methbinds.loopwindows.bind(false, "", false))
-        ki.bind("XButton2 & MButton", winwiz.methbinds.loopwindows.bind(true, "", false))
-        ki.bind("XButton2 & LButton", winwiz.methbinds.cyclewindows.bind(false, "", false))
-        ki.bind("XButton2 & RButton", winwiz.methbinds.cyclewindows.bind(true, "", false))
-        ki.bindpath(["LAlt & Space", "w"], wez.ki.methbinds.toggle)
+        kt := this.kt := kitable()
+
+
+        kt.hotki("$+CapsLock", "{CapsLock}")
+        kt.hotki("XButton2 & LButton", winwiz.methbinds.loopwindows.bind(false, "", false))
+        kt.hotki("XButton2 & RButton", winwiz.methbinds.loopwindows.bind(true, "", false))
+        kt.hotki("XButton2 & MButton", ((*)=>(winactivate(twin:=winwiz.winfromzoffset[4]))))
+        kt.hotki("$XButton2", "{XButton2}")
+        kt.dblki("$XButton1", quiktool.call.bind(quiktool, "dbl", {}, 2250), 200, ((*)=>send("{XButton1}")))
+
+        kl := this.kl := kileader("CapsLock")
+        kl.hotki("w", wez.kt.methbinds.toggle)
+        kl.pathki(["a", "h", "h"], (*)=>(
+                    run('"C:\Program Files\AutoHotkey\v2.0.2\AutoHotkey.chm"'),
+                    WinWaitActive("ahk_exe hh.exe"), Send("{LAlt Down}s{LAlt Up}"),
+                    sleep(30), Send("{Raw}" A_Clipboard), Send("{Enter}")
+                 ))
+        kl.progki(["o", "w", "e"], "wezterm-gui.exe")
+        kl.progki(["o", "f", "f"], "firefox.exe")
+;        kl.focuski(["f", "f", "x"], "ahk_exe firefox.exe")
 
         coordmode "tooltip", "screen"
-    }
-
-    static wincycle(_zorder:=2,*) {
-        winactivate winwiz.prevwin[,_zorder]
-        winwiz._debug_wintitles((winwiz.winlist[,true])*)
     }
 }
 
 class wez {
     /**
-     * @prop {kitable} ki
+     * @prop {kitable} kt
      */
-    static ki := {}
-        ,  wintitle := "ahk_exe wezterm-gui.exe"
-        ,  methbinds := {
-            cycle: {}
-        }
+   static kt := {}
+        , kl := {}
+        , wintitle := "ahk_exe wezterm-gui.exe"
 
     static __new() {
 
-        ki := this.ki := kitable()
-        ki.hotifexpr := (*)=>WinActive("ahk_exe wezterm-gui.exe")
-    
-        this.methbinds.cycle := ObjBindMethod(this, "wincycle")
+        kt := this.kt := kitable()
+        kt.hotifexpr := (*)=>WinActive(this.wintitle)
 
-        ki.bind("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
-        ki.bind("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        ki.bind("XButton2 & LButton", winwiz.methbinds.cyclewindows.bind(false, this.wintitle, false))
-        ki.bind("XButton2 & RButton", winwiz.methbinds.cyclewindows.bind(true, this.wintitle, false))
-    }
 
-    static wincycle(_zorder:=2, *) {
-        winactivate winwiz.prevwin[this.wintitle, _zorder]
+        kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
+        kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
+        kt.hotki("XButton2 & LButton", winwiz.methbinds.loopwindows.bind(false, this.wintitle, false))
+        kt.hotki("XButton2 & RButton", winwiz.methbinds.loopwindows.bind(true, this.wintitle, false))
+
+        kt.hotki("AppsKey", "{F13}")
+
+        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
+        kl.hotki("RCtrl", winwiz.methbinds.loopwindows.bind(true, this.wintitle, false))
     }
-    
 }
 
-gen.ki.enabled := true
-;;  wez.ki.enabled := true
+gen.kt.enabled := true
+gen.kl.enabled := true
 volctrl.wheel_enabled := true
-
-
-;;  HotIfWinactive "ahk_exe wezterm-gui.exe"
-;;  Hotkey "XButton1 & XButton2", ((*)=> Send( "{Ctrl Down}{PgDn}{Ctrl Up}" )), "On"
-;;  Hotkey "XButton2 & XButton1", ((*)=> Send( "{Ctrl Down}{PgUp}{Ctrl Up}" )), "On"
-;;  Hotkey "XButton1 & LButton", ((*)=> WinActivate(winwiz.prevwin["ahk_exe wezterm-gui.exe"])), "On"
-;;  Hotkey "XButton2 & LButton", ((*)=> WinActivate(winwiz.prevwin["ahk_exe wezterm-gui.exe", 3])), "On"
-;;  Hotkey "$!CapsLock", ((*)=> Send( "{F13}" )), "On"
-;;  HotIf
-
+wez.kt.enabled := true
+wez.kl.enabled := true
 
 hotkey "<#sc029", (*)=>(keywait("LWin", "T2"), reload())
 hotkey "^#0", (*)=>exitapp()
 
-
 ;;  class __s {
 ;;      static keys := Map()
-;;  
+;;
 ;;      static __new() {
 ;;          this.keys["gen"] := kitable(unset,unset,true,2000)
 ;;          this.keys["tst"] := kitable()
 ;;          this.keys["fallout"] := kitable(unset, ((*)=>WinActive("ahk_exe falloutwHR.exe")))
 ;;      }
-;;  
+;;
 ;;      static kgen => this.keys["gen"]
 ;;      static ktst => this.keys["tst"]
 ;;      static kfo  => this.keys["fallout"]
 ;;  }
-;;  
-;;  
-;;  __s.kgen.bind("LAlt & RCtrl", (*)=>Tooltip(A_TickCount))
-;;  
-;;  
-;;  __s.ktst.bind("<^>^Up", (*)=>ToolTip("^^^"))
-;;  __s.ktst.bind("<^>^Down", (*)=>ToolTip("vvv"))
-;;  
-;;  
-;;  __s.kfo.bind("XButton1 & LButton", "{Shift Down}{LButton}{Shift Up}")
-;;  __s.kfo.bind("XButton1 & RButton", "p")
-;;  __s.kfo.bind("XButton1 & MButton", "{Tab}")
-;;  
-;;  __s.kfo.bind("XButton2 & LButton", "i")
-;;  __s.kfo.bind("XButton2 & RButton", "{Escape}")
-;;  __s.kfo.bind("XButton2 & MButton", "c")
-;;  
-;;  __s.kfo.bind("XButton1 & XButton2", "{Home}")
-;;  __s.kfo.bind("XButton2 & XButton1", "s")
-;;  
-;;  
+;;
+;;
+;;  __s.kgen.hotki("LAlt & RCtrl", (*)=>Tooltip(A_TickCount))
+;;
+;;
+;;  __s.ktst.hotki("<^>^Up", (*)=>ToolTip("^^^"))
+;;  __s.ktst.hotki("<^>^Down", (*)=>ToolTip("vvv"))
+;;
+;;
+;;  __s.kfo.hotki("XButton1 & LButton", "{Shift Down}{LButton}{Shift Up}")
+;;  __s.kfo.hotki("XButton1 & RButton", "p")
+;;  __s.kfo.hotki("XButton1 & MButton", "{Tab}")
+;;
+;;  __s.kfo.hotki("XButton2 & LButton", "i")
+;;  __s.kfo.hotki("XButton2 & RButton", "{Escape}")
+;;  __s.kfo.hotki("XButton2 & MButton", "c")
+;;
+;;  __s.kfo.hotki("XButton1 & XButton2", "{Home}")
+;;  __s.kfo.hotki("XButton2 & XButton1", "s")
+;;
+;;
 ;;  __s.kgen.enabled := true
 ;;  __s.ktst.enabled := true
 ;;  __s.kfo.enabled := true
-;;  
+;;
 ;;  Hotkey "LAlt & AppsKey", (*)=>(__s.kgen.enabled := true)

@@ -9,7 +9,7 @@ class quiktool {
     static call(_msg, _pos?, _timeout?, *) {
         _timeout := _timeout ?? this.defaults.timeout
         _params := [_msg]
-        if IsSet(_pos)
+        if IsSet(_pos) and ObjHasOwnProp(_pos, "x") and ObjHasOwnProp(_pos, "y")
             _params.push(_pos.x, _pos.y)
         ToolTip(_params*)
         SetTimer (*)=>ToolTip(), (-1) * Abs(_timeout)

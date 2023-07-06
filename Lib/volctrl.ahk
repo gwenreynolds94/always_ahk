@@ -18,8 +18,8 @@ class volctrl {
         ,  progress := {}
         ,  _hidden_ := true
         ,  initialized := false
-        ,  size := { w: 25, h: A_ScreenHeight }
-        ,  position := { x: 0, y: 0 }
+        ,  size := { w: 50, h: A_ScreenHeight }
+        ,  position := { x: A_ScreenWidth-(this.size.w/2), y: 0 }
         ,  transparency := 215
         ,  orientation := "vertical"
         ,  sound_enabled_color := "c862d2d"
@@ -33,7 +33,7 @@ class volctrl {
         ,  _wheel_enabled_ := false
 
     static __new() {
-        this._wheel_hotif_ := ((*)=>(winwiz.mousewin["class"] ~= "Shell_(Secondary)?TrayWnd|AutoHotkeyGUI"))
+        this._wheel_hotif_ := ((*)=>(winwiz.mousewin["class"] ~= "Shell_(Secondary)?TrayWnd"))
         this.gui := gui("-Caption +Owner +AlwaysOnTop", "jkvolctl")
         this.gui.MarginX := this.gui.MarginY := 0
         this.progress := this.gui.add( "Progress", "Smooth"            " "  .

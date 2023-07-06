@@ -5,19 +5,72 @@
 #SingleInstance Force
 
 #Include ..\bultins_extended.ahk
+#Include ..\quiktip.ahk
 
-__DBG__describe(_objlist*) {
+class ___DBG___ {
+    static cfg := {
+        desc: {
+            nestlvlmax: 6,
+            nestchars: ["|", ":"],
+            verbosity: 2,
+            printfuncs: false
+        },
+        dbgo: {
+            focusdebugview: true,
+            opendebugview: true
+        },
+        dbgln: {
+            focusdebugview: false,
+            opendebugview: false
+        },
+        msgo: {
+            focusdebugview: true,
+            opendebugview: true
+        },
+        stdo: {
+            focusdebugview: true,
+            opendebugview: true
+        }
+    }, bm := {
+         opendebugview : objbindmethod(this, "opendebugview"),
+        focusdebugview : objbindmethod(this, "focusdebugview")
+    }
+
+    static parseopts(_opts, &_cfg) {
+        if not _opts is Object
+            return
+    }
+
+    static opendebugview(*) {
+        static _exe_path := "C:\Users\" A_UserName "\Portables\sysinternals\DebugView\dbgview64.exe"
+        if not winexist("ahk_exe dbgview64.exe") {
+            run _exe_path,,, &_dbgview_pid:=0
+            winwait "ahk_pid " _dbgview_pid
+        } settimer((*)=>(winactivate("ahk_exe dbgview64.exe")), (500).neg())
+    }
+
+    static focusdebugview(*) {
+        if winexist("ahk_exe dbgview64.exe")
+            settimer(((*)=>(winactivate()), (500).neg()))
+        else quiktray("no instances of dbgview64.exe were found", "always_ahk.DEBUG.jk_debug")
+    }
+}
+
+
+__DBG__describe(_opts?, _objlist*) {
     if not _objlist.Length
         return
     desc := ""
+    _opts := !!objhasownprop(_opts, "__o__") and !!_opts.__o__ and _opts
     nestlvl := 0
-    lvlchars := ["|", "_"]
-    indstr := inddef := " " lvlchars[1] " "
+    nestlvlmax := _opts and _opts.nestlvlmax or ___DBG___.cfg.desc.nestlvlmax or 4
+    nestchars := _opts and _opts.nestchars or ___DBG___.cfg.desc.nestchars or ["|", "_"]
+    indstr := inddef := " " nestchars[1] " "
 
     EvalIndent() {
         ind := ""
         loop nestlvl
-            ind .= " " lvlchars[Mod(A_Index + lvlchars.Length - 1, lvlchars.Length) + 1] " "
+            ind .= " " nestchars[Mod(A_Index + nestchars.Length - 1, nestchars.Length) + 1] " "
         return ind
     }
     
@@ -32,16 +85,20 @@ __DBG__describe(_objlist*) {
     CollectOwnProps(_obj) {
         out_str := ""
         _prop_names := []
-        for _prop_name in ObjOwnProps(_obj)
+        try for _prop_name in ObjOwnProps(_obj is varref and %(%_obj%)% or _obj)
             _prop_names.Push _prop_name
         if not _prop_names.Length
             return ""
         out_str .= EvalIndent() "Props[Prototype]:`n"
         for _prop_name in _prop_names {
-            out_str .= TryStringOut(_prop_name)
-            nestlvl++
-            out_str  .= TryStringOut(_obj.%_prop_name%)
-            nestlvl--
+            if nestlvl < nestlvlmax {
+                out_str .= TryStringOut(_prop_name ":")
+                if ___DBG___.cfg.desc.verbosity >= 1 {
+                    nestlvl++
+                    try (out_str .= TryStringOut(_obj.%_prop_name%))
+                    nestlvl--
+                }
+            } else out_str .= TryStringOut(_prop_name ": ...")
         }
         return out_str
     }
@@ -55,7 +112,31 @@ __DBG__describe(_objlist*) {
             return ""
         out_str .= EvalIndent() "Props[Base]:`n"
         for _prop_name in _prop_names {
-            out_str .= TryStringOut(_prop_name)
+            if nestlvl < nestlvlmax {
+                out_str .= EvalIndent() " " _prop_name
+                if ___DBG___.cfg.desc.verbosity >= 2 {
+                    propval := false
+                    try (_obj.%_prop_name%), propval:=_obj.%_prop_name%
+                    if propval {
+                        if propval is Primitive {
+                            nestcharspre := nestchars.CleanClone()
+                            nestchars := [""]
+                            out_str .= ":{" type(propval) "}: " (propval) "`n"
+                            nestchars := nestcharspre
+                        } else if propval is Func {
+                            nestcharspre := nestchars.CleanClone()
+                            nestchars := [""]
+                            out_str .= ":{" propval.__Class "}[" propval.name "]"
+                            if ___DBG___.cfg.desc.verbosity < 3
+                                out_str .= ":MN" propval.MinParams ":MX" propval.MaxParams 
+                                        . ":V" propval.IsVariadic ":O" propval.IsOptional()
+                                        . ":R" propval.IsByRef() "`n"
+                            nestchars := nestcharspre
+                        }
+                        else nestlvl++, out_str .= "`n" TryStringOut(propval), nestlvl--
+                    } else out_str .= "?`n"
+                }
+            } else out_str .= TryStringOut(_prop_name ": ...")
         }
         return out_str
     }
@@ -71,16 +152,32 @@ __DBG__describe(_objlist*) {
         return out_str
     }
 
-    TryObjectOut(out_item) {
-        ind_pre := indstr
-        indstr := '-|-'
-        out_str := EvalIndent() "{" out_item.__Class "}::`n"
-        indstr := ind_pre
+    TryEnumOut(_enum) {
+        
+    }
+
+    TryFuncOut(_func) {
+        out_str := EvalIndent() "{" _func.__Class "}::"
+        if ___DBG___.cfg.desc.verbosity < 3
+            return out_str _func.MinParams "," _func.MaxParams "`n"
+        out_str .= "`n"
         nestlvl++
-        if out_item is Array {
+        out_str .= TryStringOut( "MinMaxParams:" _func.MinParams "," _func.MaxParams )
+        out_str .= TryStringOut( "Variadic:" _func.IsVariadic "`n" )
+        nestlvl--
+        return out_str
+    }
+
+    TryObjectOut(out_item) {
+        nestcharspre := nestchars.CleanClone()
+        nestchars := ["=", "-"]
+        out_str := EvalIndent() "{" out_item.__Class "}::`n"
+        nestchars := nestcharspre
+        nestlvl++
+        if type(out_item) ~= "[aA]rray" {
             out_str .= EvalIndent() "Items[" out_item.Length "]:`n"
             for itm in out_item
-                out_str .= TryStringOut(itm)
+                out_str .= TryStringOut(itm ?? "unset")
         } else if out_item is Map {
             out_str .= CollectMapPairs(out_item)
         }
@@ -104,27 +201,45 @@ __DBG__describe(_objlist*) {
  * @param {Array} _olist
  */
 dbgo(_olist*) {
-    OutputDebug __DBG__describe(_olist*)
+    OutputDebug __DBG__describe({}, _olist*)
 }
 
 dbgln(_olist*) {
-    loop parse, __DBG__describe(_olist*), "`n", "`r" {
-        OutputDebug A_LoopField
+    opts := { 
+        __prefix__    : false
+      , nestlvlmax    : false
+      , nestchars     : false
+      , focusdebugview: false
+      , opendebugview : false
+      , __o__       : false 
     }
+    if (_olist.length > 1) and ((first_item:=_olist[1]) is Object)
+        for _optname in ObjOwnProps(opts)
+            if ObjHasOwnProp(first_item, _optname)
+                (opts.%_optname% := first_item.%_optname%), ++opts.__o__
+    if opts.__o__ and (_olist := _olist.fromrange(2))
+        open_view:=(opts.opendebugview and ___DBG___.bm.opendebugview 
+                     or opts.focusdebugview and ___DBG___.bm.focusdebugview)
+    else open_view:=(___DBG___.cfg.dbgln.opendebugview and ___DBG___.bm.opendebugview 
+                      or ___DBG___.cfg.dbgln.focusdebugview and ___DBG___.bm.focusdebugview)
+    if open_view
+        open_view
+    loop parse, __DBG__describe(opts, _olist*), "`n", "`r"
+        OutputDebug A_LoopField
 }
 
 /**
  * @param {Array} _olist
  */
 stdo(_olist*) {
-    FileAppend __DBG__describe(_olist*), "*", "utf-8"
+    FileAppend __DBG__describe({}, _olist*), "*", "utf-8"
 }
 
 /**
  * @param {Array} _olist
  */
-msgout(_olist*) {
-    MsgBox __DBG__describe(_olist*)
+msgo(_olist*) {
+    MsgBox __DBG__describe({}, _olist*)
 }
 
 

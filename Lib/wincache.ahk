@@ -4,6 +4,8 @@
 #Warn All, StdOut
 #SingleInstance Force
 
+
+
 class wincache {
     static _item_cache := Map()
 
@@ -15,7 +17,7 @@ class wincache {
     }
 }
 
-class win {
+class winwrapper {
     _hwnd     := 0x0
     _title    := ""
     _exe      := ""

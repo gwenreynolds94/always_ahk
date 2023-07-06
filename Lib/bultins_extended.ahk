@@ -1,5 +1,6 @@
 ; builtins_extended.ahk
 
+
 Class __Float extends Float {
     static __New() {
         this.Prototype.__Class := "Float"
@@ -17,12 +18,97 @@ Class __Float extends Float {
     }
 }
 
+Class __Number extends Number {
+    static __New() {
+        this.Prototype.__Class := "Number"
+        for _prop in ObjOwnProps(this.Prototype)
+            Number.Prototype.%_prop% := this.Prototype.%_prop%
+    }
+
+    Abs() {
+        return Abs(this)
+    }
+
+    Neg() {
+        return ((-1) * Abs(this))
+    }
+}
+
+
+
+Class __String extends String {
+
+    static __matchmode__ := "regex"
+
+    Static __New() {
+        this.Prototype.__Class := "String"
+        for _prop in ObjOwnProps(this.Prototype)
+            String.Prototype.%_prop% := this.Prototype.%_prop%
+    }
+
+    Length() {
+        Return StrLen(this)
+    }
+
+    Sub(_starting_pos, _length?){
+        Return SubStr(this, _starting_pos, _length ?? unset)
+    }
+
+    StartsWith(_chars) {
+        Return this.Sub(1, _chars.Length()) == _chars
+    }
+
+    EndsWith(_chars) {
+        Return this.Sub((-1) * _chars.Length(), _chars.Length()) ~= _chars
+    }
+
+    Lower() {
+        return StrLower(this)
+    }
+
+    Upper() {
+        return StrUpper(this)
+    }
+
+    Replace(_re_needle, _replacement:='', &_cnt:=(-1), _starting_pos?) {
+        repl_args := [
+            this,
+            _re_needle,
+            _replacement
+        ]
+        if _cnt >= 0
+            repl_args.Push(&_cnt)
+        if (_starting_pos ?? False)
+            repl_args.Push(_starting_pos)
+        return RegExReplace(repl_args*)
+    }
+
+    Repeat(_count) {
+        retstr := ""
+        loop _count
+            retstr .= this
+        return retstr
+    }
+
+}
+
+
+
 Class __Array extends Array {
+
+    static previd := 0
+        ,  cache := []
 
     Static __New() {
         this.Prototype.__Class := "Array"
         for _prop in ObjOwnProps(this.Prototype)
-            Array.Prototype.%_prop% := this.Prototype.%_prop%
+            if (not _prop.StartsWith("__")) or _prop.EndsWith("__")
+                Array.Prototype.%_prop% := this.Prototype.%_prop%
+    }
+
+    __new(_params*) {
+        this.___cacheid___ := ++__Array.previd
+        super.__new(_params*)
     }
 
     Reverse() {
@@ -60,6 +146,8 @@ Class __Array extends Array {
             _index := this.Length
 
         if IsSet(_index2) {
+            if _index2 = 0
+                return []
             if _index2 < 0
                 _index2 := this.Length + _index2 + 1
             if _index2 < _index
@@ -68,9 +156,11 @@ Class __Array extends Array {
                 _index2 := this.Length
         } else _index2 := this.Length
 
-        out_array := []
+        if (_index2 ?? "i2") = _index
+            try return [_index2 ? (this[_index2]) : unset]
 
-        loop (_index2 - _index) + 1
+        out_array := []
+        loop ((_index2 - _index) + 1)
             out_array.Push(this[(_index + A_Index) - 1])
 
         return out_array
@@ -81,14 +171,14 @@ Class __Array extends Array {
         Return this[this.Length]
     }
 
-    ForEach(_func) {
+    ForEach(_func, *) {
         _parsed_list := []
         for _index, _value in this
             _parsed_list.Push _func(_value, _index, this)
         return _parsed_list
     }
 
-    Filter(_func) {
+    Filter(_func, *) {
         _filtered_list := []
         for _value in this
             if !!_func(_value)
@@ -136,48 +226,45 @@ Class __Array extends Array {
 }
 
 
-Class __String extends String {
+Class __Map extends Map {
+
+    static previd := 0
+        ,  cache := []
 
     Static __New() {
-        this.Prototype.__Class := "String"
+        this.Prototype.__Class := "Map"
         for _prop in ObjOwnProps(this.Prototype)
-            String.Prototype.%_prop% := this.Prototype.%_prop%
+            if not _prop.StartsWith("__")
+                Map.Prototype.%_prop% := this.Prototype.%_prop%
+    }
+    ___cacheid___ := 0
+
+    __new(_params*) {
+        super.__new(_params*)
+        this.___cacheid___ := ++__Map.previd
     }
 
-    Length() {
-        Return StrLen(this)
+    Extend(_map2, _mode:="keep", _new_map:=false, *) {
+        newmap := _new_map and map() or this
+        if _new_map
+            for _k1, _v1 in this
+                newmap[_k1] := _v1
+        for _key, _value in _map2
+            if (!newmap.has(_key) or _mode="force")
+                newmap[_key] := _value
+        return newmap
     }
 
-    Sub(_starting_pos, _length?){
-        Return SubStr(this, _starting_pos, _length ?? unset)
-    }
+}
 
-    StartsWith(_chars) {
-        Return this.Sub(1, _chars.Length()) == _chars
-    }
-
-    EndsWith(_chars) {
-        Return this.Sub((-1) * _chars.Length(), _chars.Length()) == _chars
-    }
-
-    Lower() {
-        return StrLower(this)
-    }
-
-    Upper() {
-        return StrUpper(this)
-    }
-
-    Replace(_re_needle, _replacement:='', &_cnt:=(-1), _starting_pos?) {
-        repl_args := [
-            this,
-            _re_needle,
-            _replacement
-        ]
-        if _cnt >= 0
-            repl_args.Push(&_cnt)
-        if (_starting_pos ?? False)
-            repl_args.Push(_starting_pos)
-        return RegExReplace(repl_args*)
+class FuncArray extends Array {
+    call(_args*) {
+        retvals := []
+        for _func in this
+            if _func is func or hasmethod(_func, "call")
+                if (_funcargs:=_args.fromrange(!!_func.call.maxparams, _func.call.maxparams))
+                    retvals.push(_func(_funcargs*))
+        return retvals
     }
 }
+

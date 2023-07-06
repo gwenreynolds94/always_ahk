@@ -4,7 +4,6 @@
 #Warn All, StdOut
 #SingleInstance Force
 
-#Include config_tool.ahk
 
 if (A_LineFile = A_ScriptFullPath) {
     test_config := test_conf("C:\Users\" A_UserName "\.test_conf",
