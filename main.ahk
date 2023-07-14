@@ -10,6 +10,8 @@ outputdebug "
     |>|>|>|>|>__always_ahk__|>|>|>|>|>__starting__|>|>|>|>|>
 )"
 
+setwindelay 0
+
 #Include <builtins_extended>
 #Include <config_tool>
 #Include <winwiz>
@@ -84,32 +86,88 @@ class gen {
            /**
             * @prop {kitable} kt
             */
-    static kt := {},
+    static kt:= kitable()
            /**
             * @prop {kileader} kl
             */
-           kl := {}
+         , kl:= kileader("CapsLock")
+           /**
+            * @prop {kitable} ffkt
+            */
+         , ffkt:= kitable()
+           /**
+            * @prop {kitable} knto
+            */
+         , knto:= kitable()
+           /**
+            * @prop {object} anims
+            */
+         , anims:= {_:0
+               ,           full: []
+               ,       leftfull: []
+               ,   lefthalfleft: []
+               ,  righthalfleft: []
+               , righthalfright: []
+               ,  lefthalfright: []
+               ,      rightfull: []
+               ,       miscanim: vector4.rect()
+               ,          slide: winwiz.slide()
+           }
 
     static __new() {
+        anims := this.anims
+        anfull   := anims.full := [anims.miscanim.set(5, 5, a_screenwidth * 2 - 10, a_screenheight - 10)*]
+        anlfull  := anims.leftfull := [anims.miscanim.set(5, 5, a_screenwidth - 10, a_screenheight - 10)*]
+        anrfull  := anims.rightfull := [anims.miscanim.set(anlfull*).add(a_screenwidth,0,0,0)*]
+        anlhalfl := anims.lefthalfleft := [anims.miscanim.set(anlfull*).mul(1,1,0.5,1)*]
+        anlhalfr := anims.lefthalfright := [anims.miscanim.set(anlhalfl*).add(anlhalfl[3],0,0,0)*]
+        anrhalfl := anims.righthalfleft := [anims.miscanim.set(anlhalfl*).add(a_screenwidth,0,0,0)*]
+        anrhalfr := anims.righthalfright := [anims.miscanim.set(anlhalfr*).add(a_screenwidth,0,0,0)*]
 
+        kt := this.kt
 
-        kt := this.kt := kitable()
-
-
-        kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false))
-        kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false))
+        kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
+        kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false, false))
         kt.hotki("XButton2 & MButton", ((*)=>(winactivate(twin:=winwiz.winfromzoffset[4]))))
         kt.hotki("$XButton2", "{XButton2}")
-        kt.dblki("$XButton1", quiktool.call.bind(quiktool, "dbl", {}, 2250), 200, ((*)=>send("{XButton1}")))
+        kt.dblki("$XButton1", (*)=>(send("{Ctrl Down}c{Ctrl Up}")), 200, ((*)=>send("{XButton1}")))
+        kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
+        kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
+        kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
+        kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
 
-        kl := this.kl := kileader("CapsLock")
-        kl.hotki("w", wez.kt.bm.toggle)
+        kl := this.kl
+
+        kl.pathki(["w", "w"], anims.slide.bm.call.bind(anims.full          ))
+        kl.pathki(["w", "q"], anims.slide.bm.call.bind(anims.leftfull      ))
+        kl.pathki(["w", "e"], anims.slide.bm.call.bind(anims.rightfull     ))
+        kl.pathki(["w", "a"], anims.slide.bm.call.bind(anims.lefthalfleft  ))
+        kl.pathki(["w", "s"], anims.slide.bm.call.bind(anims.lefthalfright ))
+        kl.pathki(["w", "d"], anims.slide.bm.call.bind(anims.righthalfleft ))
+        kl.pathki(["w", "f"], anims.slide.bm.call.bind(anims.righthalfright))
+
+        kl.pathki(["t", "w", "e"], wez.kt.bm.toggle)
         kl.pathki(["a", "h", "h"], winwiz.bm.searchv2docs.bind(0, 0))
         kl.pathki(["a", "h", "+h"], winwiz.bm.searchv2docs.bind(0, 1))
+        kl.pathki(["a", "o", "t"], (*)=>(wincache["A"].alwaysontop := 1))
+        kl.pathki(["n", "o", "t"], (*)=>(wincache["A"].alwaysontop := 0))
         kl.pathki(["k", "l", "l"], winwiz.bm.winkillclass.bind("", 2))
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
-;        kl.focuski(["f", "f", "x"], "ahk_exe firefox.exe")
+        kl.progki(["o", "b", "c", "b"], A_ScriptDir "\Apps\BCV2\BCV2.exe")
+
+        ffkt := this.ffkt
+        ffkt.hotifexpr := ((*)=>WinActive("ahk_exe firefox.exe"))
+        ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
+        ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
+
+        knto := this.knto
+        knto.timeout := 60 * 1000
+
+        knto.hotki(",", winwiz.bm.loopwindows.bind(0,"",0,0))
+        knto.hotki(".", winwiz.bm.loopwindows.bind(1,"",0,0))
+
+        kt.hotki("AppsKey & \", this.knto.bm.toggle)
 
         coordmode "tooltip", "screen"
     }
@@ -131,26 +189,31 @@ class wez {
 
         kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
         kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, this.wintitle, false))
-        kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, false))
-        kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}", 300, "{Ctrl Down}[{Ctrl Up}:")
-
+        kt.hotki("$XButton1", "{Ctrl Down}o{Ctrl Up}")
+        kt.hotki("$XButton2", "{Ctrl Down}i{Ctrl Up}")
+        ; kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, this.wintitle, true, false))
+        ; kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, true, false))
+        kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
         kt.hotki("AppsKey", "{F13}")
         kt.hotki("!CapsLock", "{F13}")
 
-        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
-        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false))
+;        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
+;        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false, false))
     }
 }
 
 gen.kt.enabled := true
 gen.kl.enabled := true
+gen.ffkt.enabled := true
 volctrl.wheel_enabled := true
 wez.kt.enabled := true
 wez.kl.enabled := true
 
 hotkey "<#sc029", (*)=>(keywait("LWin", "T2"), reload())
 hotkey "^#0", (*)=>exitapp()
+
+
+;;  class __s {
 
 ;;  class __s {
 ;;      static keys := Map()

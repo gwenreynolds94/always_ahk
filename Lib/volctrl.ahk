@@ -4,7 +4,6 @@
 #Warn All, StdOut
 #SingleInstance Force
 
-#Include DEBUG\jk_debug.ahk
 #Include winwiz.ahk
 
 class volctrl {
@@ -33,9 +32,11 @@ class volctrl {
         ,  _wheel_enabled_ := false
 
     static __new() {
-        this._wheel_hotif_ := ((*)=>(winwiz.mousewin["class"] ~= "Shell_(Secondary)?TrayWnd"))
+        this._wheel_hotif_ := ((*)=>(winwiz.mousewintitle["class"] ~= "Shell_(Secondary)?TrayWnd"))
         this.gui := gui("-Caption +Owner +AlwaysOnTop", "jkvolctl")
         this.gui.MarginX := this.gui.MarginY := 0
+        MonitorGetWorkArea(1, &_left, &_top, &_right, &_bottom)
+        this.position.x := (_right-_left) - (this.size.w/2)
         this.progress := this.gui.add( "Progress", "Smooth"            " "  .
                                                    "range0-100"        " "  .
                                                    "BackgroundAAAAAA"  " "  .
@@ -45,6 +46,9 @@ class volctrl {
                                                    this.sound_enabled_color )
         this.update_progress
         this.update_color
+        this.gui.show "NA Hide"
+        WinSetTransColor("AAAAAA " this.transparency, this.gui)
+        this.gui.hide
         this.bm.hide := ObjBindMethod(this, "hide")
         this.bm.decrease := ObjBindMethod(this, "decrease")
         this.bm.increase := ObjBindMethod(this, "increase")
@@ -81,18 +85,15 @@ class volctrl {
         this.update_progress
         this.update_color
         if !!this.hidden {
-            guishow_opts := "NA"
-            if !this.initialized
-                guishow_opts .= " x" this.position.x " y" this.position.y
+            guishow_opts := "NA x" this.position.x " y" this.position.y
             this.gui.Show(guishow_opts)
-            WinSetTransColor("AAAAAA " this.transparency, this.gui)
-            this.initialized := true
             this._hidden_ := false
         }
         settimer this.bm.hide, Abs(this.timeout) * (-1)
     }
 
     static hide(*) {
+        settimer this.bm.hide, 0
         this.gui.Hide()
         this._hidden_ := true
     }

@@ -1,6 +1,5 @@
 ; builtins_extended.ahk
 
-
 Class __Float extends Float {
     static __New() {
         this.Prototype.__Class := "Float"
@@ -32,9 +31,19 @@ Class __Number extends Number {
     Neg() {
         return ((-1) * Abs(this))
     }
+
+    Clamp(_min:=0,_max:=1) {
+        if _max < this
+            return _max
+        else if _min > this
+            return _min
+        else return this
+    }
+
+    Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
+    Min(_values*) => Min(this, _values*)
+    Max(_values*) => Max(this, _values*)
 }
-
-
 
 Class __String extends String {
 
@@ -91,7 +100,6 @@ Class __String extends String {
     }
 
 }
-
 
 
 Class __Array extends Array {
@@ -177,6 +185,8 @@ Class __Array extends Array {
             _parsed_list.Push _func(_value, _index, this)
         return _parsed_list
     }
+    Min(_values*) => Min(this.extend(_values)*)
+    Max(_values*) => Max(this.extend(_values)*)
 
     Filter(_func, *) {
         _filtered_list := []
@@ -184,6 +194,14 @@ Class __Array extends Array {
             if !!_func(_value)
                 _filtered_list.Push(_value)
         return _filtered_list
+    }
+
+    Filter2(_func, &_filteredtrue:=false, &_filteredfalse:=false, *) {
+        _filteredtrue := _filteredtrue or []
+        _filteredfalse := _filteredfalse or []
+        for _value in this
+            (!!_func(_value) ? _filteredtrue.push(_value) : _filteredfalse.push(_value))
+        return map( true, _filteredtrue, false, _filteredfalse )
     }
 
     /**
@@ -261,10 +279,15 @@ class FuncArray extends Array {
     call(_args*) {
         retvals := []
         for _func in this
-            if _func is func or hasmethod(_func, "call")
+            if _func is func or hasmethod(_func, "call") {
                 if (_funcargs:=_args.fromrange(!!_func.call.maxparams, _func.call.maxparams))
                     retvals.push(_func(_funcargs*))
+            } else if (_func is string)
+                send(_func)
         return retvals
     }
 }
+
+#include maths.ahk
+
 

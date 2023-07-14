@@ -2,7 +2,6 @@
 #Warn All, StdOut
 #SingleInstance Force
 
-#Include DEBUG\jk_debug.ahk
 #Include builtins_extended.ahk
 
 
@@ -50,7 +49,6 @@ class kitable extends map {
     }
 
     enable(*) {
-        dbgln("TRIGGERED;;;kitable[ " this.id " ]enable()")
         kidisable := this.bm.disable
         funcwrapr := this.bm.funcwrapr
         ; hotifexpr := (_hotifexpr is func) ? _hotifexpr : this.hotifexpr
@@ -70,7 +68,6 @@ class kitable extends map {
     }
 
     disable(*) {
-        dbgln("TRIGGERED;;;kitable[ " this.id " ]disable()")
         kidisable := this.bm.disable
         SetTimer(kidisable,0)
         hotifexpr := this.prevhotif
@@ -88,7 +85,6 @@ class kitable extends map {
     }
 
     funcwrapr(_actions, _disable:=false, *) {
-        dbgln("TRIGGERED;;;kitable[ " this.id " ]funcwrapr(_actions, _disable)", _actions, _disable)
         _actions := (_actions is array) ? _actions : [_actions]
         if _disable
             this.bm.disable()
@@ -103,8 +99,11 @@ class kitable extends map {
         funcwrapr := this.bm.funcwrapr
     }
 
+    /**
+     * @param {string} _ki
+     * @param {array|func|string} _actions
+     */
     hotki(_ki, _actions, *) {
-        dbgln("TRIGGERED;;;kitable[ " this.id " ]hotki( " _ki " )")
         funcwrapr := this.bm.funcwrapr
         _actions := (_actions is array) ? (_actions) : ([_actions])
         this[_ki] := funcwrapr.bind(_actions, this.oneshot)
@@ -135,7 +134,6 @@ class kitable extends map {
     }
 
     pathki(_kipath, _actions, *) {
-        dbgln("TRIGGERED;;;kitable[ " this.id " ]pathki()")
         enablemeth := this.bm.enable
         _actions := (_actions is array) ? _actions : [_actions]
         kipath := (_kipath is array) ? _kipath : [_kipath]
@@ -175,17 +173,14 @@ class kileader extends kitable {
     }
 
     hotki(_ki, _actions, *) {
-        dbgln("TRIGGERED;;;kileader[ " this.id ", " this.leader " ]hotki( " _ki " )")
         this.root.hotki(_ki, _actions)
     }
 
     pathki(_kipath, _actions, *) {
-        dbgln("TRIGGERED;;;kileader[ " this.id ", " this.leader " ]pathki()")
         this.root.pathki(_kipath, _actions)
     }
 
     progki(_kipath, _progpath, _relative_to:=true, *) {
-        dbgln("TRIGGERED;;;kileader[ " this.id ", " this.leader " ]progki()")
         this.root.progki(_kipath, _progpath, _relative_to)
     }
 }

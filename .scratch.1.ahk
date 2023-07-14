@@ -31,5 +31,10 @@ onxbtn1(*) {
     tooltip ostr
 }
 
-hotkey key, onxbtn1, "on"
-hotkey "-", (*)=>exitapp(), "on"
+asd := [1,2,43,567]
+qwe := 666
+zcx := 0
+ert := ""
+
+for _var in [asd, [qwe], [zcx], [ert]]
+    dbgln(_var*)

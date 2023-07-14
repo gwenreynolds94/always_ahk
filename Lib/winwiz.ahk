@@ -5,7 +5,9 @@
 #SingleInstance Force
 
 #Include builtins_extended.ahk
+#Include anim.ahk
 #Include quiktip.ahk
+#Include wincache.ahk
 
 class winwiz {
 
@@ -33,7 +35,7 @@ class winwiz {
 
     static __new() {
         this.bm.cyclewindows := objbindmethod(this, "cyclewindows")
-        this.bm.loopwindows := objbindmethod(this, "loopwindows")
+        this.bm.loopwindows  := objbindmethod(this,  "loopwindows")
         this.bm.searchv2docs := objbindmethod(this, "searchv2docs")
         this.bm.winkillclass := objbindmethod(this, "winkillclass")
     }
@@ -41,7 +43,9 @@ class winwiz {
     static _debug_wintitles(_wlist*) {
         outstr := ""
         for _wtitle in _wlist
-            outstr .= "::: " wingettitle(_wtitle) "`n:::class:: " wingetclass(_wtitle) "`n:::processname:: " wingetprocessname(_wtitle) "`n`n"
+            outstr .= ":::"             wingettitle(_wtitle) "`n"
+                   .  ":class:: "       wingetclass(_wtitle) "`n"
+                   .  ":processname:: " wingetprocessname(_wtitle) "`n`n"
         outputdebug outstr "`n::: ::: ::: ::: :::`n`n"
     }
 
@@ -49,7 +53,7 @@ class winwiz {
      * @param {string} [_return_type="hwnd"] `hwnd` | `class` | `title` | `process` | `processpath`
      * @prop {number|string} win_under_mouse
      */
-    static mousewin[_return_type:="hwnd"] {
+    static mousewintitle[_return_type:="hwnd"] {
         get {
             MouseGetPos(,, &_hwnd)
             return (not winexist(_hwnd))          ? false               :
@@ -61,11 +65,16 @@ class winwiz {
         }
     }
 
+    static mousewin => wincache[winwiz.mousewintitle]
+
     /**
-     * @param {string} [_wintitle=""]
-     * @param {integer} [_use_recent=false]
+     * @prop {Array} winlist
+     * @return {Array}
      */
     static winlist[_wintitle:="", _use_recent:=false] {
+        /**
+         * @return {Array}
+         */
         get {
             winlist_filter(_f_wintitle, *) {
                 for _listgroup in [[this.whitelists,1],[this.blacklists,0]]
@@ -78,6 +87,9 @@ class winwiz {
             }
             if !!_use_recent and !!this._recent_winlists_.Has(_wintitle)
                 return this._recent_winlists_[_wintitle]
+            /**
+              * @type {Array}
+              */
             retwinlist :=
                 this._recent_winlists_[_wintitle] :=
                     wingetlist(_wintitle).Filter(winlist_filter)
@@ -86,24 +98,57 @@ class winwiz {
     }
 
 
-    class swirl {
-        
+    class wiggle extends anim.win {
+          cycles := 10
+        , amplitude := 32
+
+        foreachloop(&_progress, _tickstart, _duration) {
+            if not super.foreachloop(&_progress, _tickstart, _duration)
+                return (false)
+            this.modrect.x := sin(2 * Math.PI * this.cycles * _progress) * this.amplitude
+            this.modrect.y := cos(2 * Math.PI * this.cycles * _progress) * this.amplitude * 0.75
+            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.wrect, cos(2 * Math.PI * _progress))
+            return _progress
+        }
     }
 
-    static loopwindows(_reverse:=false, _wintitle:="", _use_recent_winlist:=false, *) {
+    class spring extends anim.win {
+        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
+        amplitude := 64,
+        cycles := 5
+
+        foreachloop(&_progress, _tickstart, _duration) {
+            if not super.foreachloop(&_progress, _tickstart, _duration)
+                return (this.wrect.set(this.targrect), false)
+            this.modrect.y := cos(2 * Math.PI * _progress * this.cycles) * this.amplitude * 0.75
+            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.targrect, cos(2 * Math.PI) * _progress)
+            return _progress
+        }
+    }
+
+    class slide extends anim.win {
+        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
+        duration := 333
+        foreachloop(&_progress, _tickstart, _duration) {
+            if not super.foreachloop(&_progress, _tickstart, _duration)
+                return (this.wrect.set(this.targrect), false)
+            this.modrect.set(this.targrect).sub(this.wrect).mul(sin(0.5 * Math.PI * _progress)).add(this.wrect)
+            this.rtnrect.set(this.wrect).lerp(this.modrect, sin(0.5 * Math.PI * _progress))
+            return _progress
+        }
+    }
+
+    static loopwindows(_reverse:=false, _wintitle:="", _always_switch:=false, _use_recent_winlist:=false, *) {
         ; static setwinpos := winwiz.dll.setwindowpos, SWP := setwinpos.SWP, HWND_ := setwinpos.HWND
         _wintitle := (!!_wintitle and !!winexist(_wintitle)) ? _wintitle : ""
-        targwins := this.winlist[_wintitle, _use_recent_winlist]
-        winlen := targwins.length
-        if winlen <= 1
+        targwins := wincache[_wintitle]
+        if (targwins.length = 1) and !!(_wintitle) and _always_switch
+            targwins := this.winlist
+        if (winlen := targwins.length) < 1
             return false
-        ; ... use setwindowpos to set z_order of window
-        ; if !_reverse
-            ; setwinpos(targwins[1], HWND_.BOTTOM,,,,,SWP.NOSIZE|SWP.NOMOVE|SWP.NOACTIVATE)
-        ; setwinpos(targwins[_reverse ? winlen : 2], HWND_.TOP,,,,,SWP.NOSIZE|SWP.NOMOVE|SWP.SHOWWINDOW)
-        ; winactivate targwins[winlen]
-
-        dest_index := _reverse ? winlen : !!_wintitle ? 2 : (winmovebottom(targwins[1]), 2)
+        dest_index := _reverse ? winlen : 2
+        if (dest_index = 2) and winlen > dest_index
+            this.insertafter(targwins[1], targwins[winlen])
         winactivate targwins[dest_index]
         return true
     }
@@ -125,12 +170,14 @@ class winwiz {
         quiktray("death total: " classlist.length, "[ " winclass " ]", 3333)
     }
 
-    static insertafter(_wtitlea, _wtitleb:="") {
+    static insertafter(_wtitlea, _wtitleb:="", _activate:=false, *) {
         static setwinpos := winwiz.dll.setwindowpos, SWP := setwinpos.SWP, HWND_ := setwinpos.HWND
-        w_a := !!winexist(_wtitlea) ? _wtitlea : false
-        w_b := !!winexist(_wtitleb) ? _wtitleb : false
-        if not ( w_a and w_b )
+        w_a := winexist(_wtitlea)
+        w_b := winexist(_wtitleb)
+        swp_opts := (!_activate and SWP.NOACTIVATE)
+        if not w_a
             return false
+        setwinpos(w_a, w_b,,,,, swp_opts)
     }
 
     /**
@@ -171,6 +218,7 @@ class winwiz {
             return
         winactivate _newwindow and _found or wintitle
         winwaitactive wintitle
+        sleep 20
         send "{LAlt Down}s{LAlt Up}"
         sleep 30
         send "{LCtrl Down}a{LCtrl Up}"
@@ -180,7 +228,76 @@ class winwiz {
         send "{Enter}"
     }
 
+    class drag {
+        static home := { win : false
+                  ,   winpos : vector2.pos()
+                  ,  winsize : vector2.size()
+                  , fbndsoff : vector4.rect()
+                  , mousepos : vector2.pos() }
+        , ismoving := false
+        , issizing := false
+        , holdtomove := "LButton"
+        , holdtosize := "RButton"
+        , timerinterval := 10
+        , min_size := vector2.size(100, 100)
+        static startmove(*) {
+            static deltapos := vector2.pos(), newpos := vector2.pos()
+            this.ismoving := true
+            this.home.win := winwiz.mousewin
+            this.home.winpos.set(this.home.win.rect.pos)
+            this.home.fbndsoff.set(this.home.win.frameboundsmarginrect)
+            this.home.mousepos.set(winwiz.dll.mouse.cursorpos)
+            settimer _moving_, this.timerinterval
+            _moving_(*) {
+                if !getkeystate(this.holdtomove, "P")
+                    return settimer(,0)
+                deltapos.set(winwiz.dll.mouse.cursorpos).sub(this.home.mousepos)
+                newpos.set(this.home.winpos).add(deltapos).add(this.home.fbndsoff)
+                winwiz.dll.setwindowpos(this.home.win, 0, newpos*)
+            }
+        }
+        static startsize(*) {
+            static newsize := vector4.rect(), deltapos := vector2.pos()
+            this.ismoving := true
+            this.home.win := winwiz.mousewin
+            this.home.winrect.set(this.home.win.rect)
+            this.home.mousepos.set(winwiz.dll.mouse.cursorpos)
+            settimer _moving_, this.timerinterval
+            _moving_(*) {
+                if !getkeystate(this.holdtomove, "P")
+                    return settimer(,0)
+                deltapos.set(winwiz.dll.mouse.cursorpos).sub(this.home.mousepos)
+                newrect.set(this.home.winrect).add(deltapos*)
+                winwiz.dll.setwindowpos(this.home.win, 0, newrect*)
+            }
+        }
+    }
+
     class dll {
+
+        class mouse {
+            static cursorpos[_relative?] {
+                get => this.getcursorpos()
+                set => this.setcursorpos(value.x, value.y, _relative?)
+            }
+
+            static getcursorpos(*) {
+                int_point := Buffer(8)
+                DllCall "GetCursorPos", "ptr", int_point
+                ret_point := vector2.pos( NumGet(int_point, 0, "int") ,
+                                          NumGet(int_point, 4, "int") )
+                return ret_point
+            }
+
+            static setcursorpos(_mouse_x?, _mouse_y?, _relative:=false, *) {
+                existing_point := this.getcursorpos()
+                _mouse_x := _relative ? (existing_point.x+=(_mouse_x ?? 0)) : (_mouse_x ?? existing_point.x)
+                _mouse_y := _relative ? (existing_point.y+=(_mouse_y ?? 0)) : (_mouse_y ?? existing_point.y)
+                DllCall "SetCursorPos"
+                    , "int", _mouse_x
+                    , "int", _mouse_y
+            }
+        }
 
         class setwindowpos {
 
@@ -200,29 +317,133 @@ class winwiz {
                            , NOTTOPMOST : (-2)
                            , TOP        : ( 0)
                            , TOPMOST    : (-1) }
+                 , bm := {
+                     sansextframebounds : objbindmethod(this, "sansextframebounds")
+                 }
 
             static call(_hwnd, _hwnd_insert_after?, _x?, _y?, _cx?, _cy?, _uflags?) {
                 static uflags := this.SWP.FRAMECHANGED|this.SWP.SHOWWINDOW
+                _hwnd := winexist(_hwnd or "A")
 
                 if not isset(_uflags) {
-                    uflags := this.SWP.FRAMECHANGED|this.SWP.SHOWWINDOW
-                    if !isset(_x) or !isset(_y)
-                        uflags |= this.SWP.NOMOVE
-                    if !isset(_cx) or !isset(_cy)
-                        uflags |= this.SWP.NOSIZE
+                    uflags := this.SWP.NOACTIVATE
                 } else if _uflags is number
                     uflags := _uflags
 
+                hasNOMOVE:=((uflags & this.SWP.NOMOVE) == this.SWP.NOMOVE)
+                hasNOSIZE:=((uflags & this.SWP.NOSIZE) == this.SWP.NOSIZE)
+
+                if !isset(_x) or !isset(_y)
+                    uflags |= !hasNOMOVE and this.SWP.NOMOVE
+                else if hasNOMOVE
+                    uflags &= ~this.SWP.NOMOVE
+
+                if !isset(_cx) or !isset(_cy)
+                    uflags |= !hasNOSIZE and this.SWP.NOSIZE
+                else if hasNOSIZE
+                    uflags &= ~this.SWP.NOSIZE
+
                 dllcall "SetWindowPos",
-                        "UInt"        , _hWnd                             ,
-                        "UInt"        , _hwnd_insert_after ?? 0           ,
-                        "Int"         , _x ?? 0                           ,
-                        "Int"         , _y ?? 0                           ,
-                        "Int"         , _cx ?? 0                          ,
-                        "Int"         , _cy ?? 0                          ,
-                        "UInt"        , uflags
+                        "UInt"        , _hWnd                  ,
+                        "UInt"        , _hwnd_insert_after ?? 0,
+                        "Int"         , _x ?? 0                ,
+                        "Int"         , _y ?? 0                ,
+                        "Int"         , _cx ?? 0               ,
+                        "Int"         , _cy ?? 0               ,
+                        "UInt"        , uflags                 ;
             }
 
+            static extframeboundsmargin(_hwnd) {
+                extfrmbnds := winwiz.dll.dwmgetwindowattribute.extendedframebounds(_hwnd).rectified
+                ncwinrect  := winwiz.dll.getwindowrect(_hwnd).rectified
+                return ncwinrect.sub(extfrmbnds)
+            }
+
+            static sansextframebounds(_hwnd, _x?, _y?, _cx?, _cy?, _hwnd_insert_after?, _uflags?, _use_prev_offset:=true, *) {
+                static prevoffsets := map(), winrect := vector4.rect()
+                _hwnd := winexist(_hwnd or "A")
+                if _use_prev_offset and prevoffsets.has(_hwnd)
+                    offset := prevoffsets[_hwnd]
+                else prevoffsets[_hwnd] := 
+                        offset := winwiz.dll.setwindowpos.extframeboundsmargin(_hwnd)
+                _args := [winrect.set(_x, _y, _cx, _cy).add(offset)*]
+                _args.push(_uflags ?? unset)
+                winwiz.dll.setwindowpos( (prevhwnd:=_hwnd), _hwnd_insert_after ?? unset, _args* )
+            }
+
+        }
+
+        class getwindowrect {
+
+            static call(_hwnd?) {
+                _hwnd := winexist((_hwnd ?? "A") or "A")
+                lpRect := buffer(16)
+                dllcall "GetWindowRect", "ptr", _hwnd, "ptr", lpRect
+                retRect := vector4.rect.corners( numget(lpRect,  0, "int")
+                                               , numget(lpRect,  4, "int")
+                                               , numget(lpRect,  8, "int")
+                                               , numget(lpRect, 12, "int") )
+                return retRect
+            }
+
+            static framebounds(_hwnd?) =>
+                winwiz.dll.dwmgetwindowattribute.extendedframebounds(
+                                    winexist((_hwnd ?? "A") or "A"))
+        }
+
+        class dwmgetwindowattribute {
+            static DWMWA := {
+                NCRENDERING_ENABLED           : 0x00000001
+              , NCRENDERING_POLICY            : 0x00000002
+              , TRANSITIONS_FORCEDISABLED     : 0x00000003
+              , ALLOW_NCPAINT                 : 0x00000004
+              , CAPTION_BUTTON_BOUNDS         : 0x00000005
+              , NONCLIENT_RTL_LAYOUT          : 0x00000006
+              , FORCE_ICONIC_REPRESENTATION   : 0x00000007
+              , FLIP3D_POLICY                 : 0x00000008
+              , EXTENDED_FRAME_BOUNDS         : 0x00000009
+              , HAS_ICONIC_BITMAP             : 0x0000000a
+              , DISALLOW_PEEK                 : 0x0000000b
+              , EXCLUDED_FROM_PEEK            : 0x0000000c
+              , CLOAK                         : 0x0000000d
+              , CLOAKED                       : 0x0000000e
+              , FREEZE_REPRESENTATION         : 0x0000000f
+              , PASSIVE_UPDATE_MODE           : 0x00000010
+              , USE_HOSTBACKDROPBRUSH         : 0x00000011
+              , USE_IMMERSIVE_DARK_MODE       : 0x00000014
+              , WINDOW_CORNER_PREFERENCE      : 0x00000021
+              , BORDER_COLOR                  : 0x00000022
+              , CAPTION_COLOR                 : 0x00000023
+              , TEXT_COLOR                    : 0x00000024
+              , VISIBLE_FRAME_BORDER_THICKNESS: 0x00000025
+              , SYSTEMBACKDROP_TYPE           : 0x00000026
+              , LAST                          : 0x00000027
+            }
+            static call(_hwnd, _dwAttribute, &_pvAttribute, _cbAttribute) {
+                _hwnd := winexist(_hwnd or "A")
+                dllcall "dwmapi\DwmGetWindowAttribute",
+                        "ptr" , _hwnd                 ,
+                        "uint", _dwAttribute          ,
+                        "ptr" , _pvAttribute          ,
+                        "uint", _cbAttribute          ;
+            }
+            static extendedframebounds(_hwnd) {
+                pvAttribute := buffer(16)
+                winwiz.dll.dwmgetwindowattribute _hwnd                           ,
+                                                 this.DWMWA.EXTENDED_FRAME_BOUNDS,
+                                                 &pvAttribute                    ,
+                                                 pvAttribute.size
+                retRect := vector4.rect.corners( numget(pvAttribute,  0, "int")
+                                               , numget(pvAttribute,  4, "int")
+                                               , numget(pvAttribute,  8, "int")
+                                               , numget(pvAttribute, 12, "int") )
+                return retRect
+            }
+            static extendedframeboundsoffset(_hwnd) {
+                extfrmbnds := winwiz.dll.dwmgetwindowattribute.extendedframebounds(_hwnd)
+                ncwinrect := winwiz.dll.getwindowrect(_hwnd)
+                return ncwinrect.sub(extfrmbnds)
+            }
         }
 
     }

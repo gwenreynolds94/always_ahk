@@ -10,35 +10,55 @@
 class ___DBG___ {
     static cfg := {
         desc: {
+            __o__: 1,
             nestlvlmax: 6,
             nestchars: ["|", ":"],
             verbosity: 2,
-            printfuncs: false
+            printfuncs: true
         },
         dbgo: {
-            focusdebugview: true,
-            opendebugview: true
-        },
-        dbgln: {
+            __o__: 1,
             focusdebugview: false,
             opendebugview: false
         },
-        msgo: {
+        dbgln: {
+            __o__: 1,
             focusdebugview: true,
-            opendebugview: true
+            opendebugview: true,
+            focusprevwin: false,
+            focusprevwintimeout: 2222
+        },
+        msgo: {
+            __o__: 1,
+            focusdebugview: false,
+            opendebugview: false
         },
         stdo: {
-            focusdebugview: true,
-            opendebugview: true
+            __o__: 1,
+            focusdebugview: false,
+            opendebugview: false
         }
     }, bm := {
-         opendebugview : objbindmethod(this, "opendebugview"),
-        focusdebugview : objbindmethod(this, "focusdebugview")
-    }
+         opendebugview   : objbindmethod(this, "opendebugview"),
+        focusdebugview   : objbindmethod(this, "focusdebugview"),
+        activateprevwin  : objbindmethod(this, "activateprevwin"),
+        activatedebugview: objbindmethod(this, "activatedebugview"),
+    }, debugview_wintitle := "ahk_exe dbgview64.exe"
 
-    static parseopts(_opts, &_cfg) {
-        if not _opts is Object
-            return
+    static __new() {
+    }
+    static asd => (13,235,32,46,34,6,346,34,6,36,
+        0,045)
+
+    static parseopts(&_opts, &_cfgs, _strip_opts:=true, _fill_opts:=true, _set_cfgs:=false, _whatif:=false) {
+        if !objhasownprop(_opts, "__o__")
+            return false
+        optsincfgs  :=  [objownprops(_opts)*].filter2((_v)=>(objhasownprop(_cfgs,_v)))
+        cfgsinopts  :=  [objownprops(_cfgs)*].filter2((_v)=>(objhasownprop(_opts,_v)))
+        (_strip_opts and optsincfgs[ false ].foreach((_v,*)=>(%(&_opts)%.deleteprop(_v))))
+        ( _fill_opts and cfgsinopts[ false ].foreach((_v,*)=>(%(&_opts)%.%_v%:=_cfgs.%_v%)))
+        (  _set_cfgs and optsincfgs[  true ].foreach((_v,*)=>(%(&_cfgs)%.%_v%:=_opts.%_v%)))
+        return map("opts", _opts, "cfgs", _cfgs)
     }
 
     static opendebugview(*) {
@@ -46,13 +66,23 @@ class ___DBG___ {
         if not winexist("ahk_exe dbgview64.exe") {
             run _exe_path,,, &_dbgview_pid:=0
             winwait "ahk_pid " _dbgview_pid
-        } settimer((*)=>(winactivate("ahk_exe dbgview64.exe")), (500).neg())
+            winactivate "ahk_pid " _dbgview_pid
+        } 
     }
 
-    static focusdebugview(*) {
-        if winexist("ahk_exe dbgview64.exe")
-            settimer(((*)=>(winactivate()), (500).neg()))
-        else quiktray("no instances of dbgview64.exe were found", "always_ahk.DEBUG.jk_debug")
+    static prevwin => (
+        SetTitleMatchMode("RegEx"),
+        winexist("ahk_exe i)(wezterm(\-gui)?|cmd|pwsh)\.exe") )
+
+    static activateprevwin(*) => ( settimer(this.bm.activateprevwin,0),
+            (_pw:=this.prevwin) and winexist(_pw) and winactivate(_pw))
+    static activatedebugview(*) => ( settimer(this.bm.activatedebugview,0),
+            winexist(this.debugview_wintitle) and winactivate(this.debugview_wintitle))
+
+    static focusdebugview(_focus_prevwin:=false, *) {
+        this.activatedebugview()
+        if _focus_prevwin
+            settimer(___DBG___.bm.activateprevwin, (1000).neg())
     }
 }
 
@@ -61,10 +91,11 @@ __DBG__describe(_opts?, _objlist*) {
     if not _objlist.Length
         return
     desc := ""
-    _opts := !!objhasownprop(_opts, "__o__") and !!_opts.__o__ and _opts
+    _opts := (_opts ?? false) or ___DBG___.cfg.desc.clone()
     nestlvl := 0
-    nestlvlmax := _opts and _opts.nestlvlmax or ___DBG___.cfg.desc.nestlvlmax or 4
-    nestchars := _opts and _opts.nestchars or ___DBG___.cfg.desc.nestchars or ["|", "_"]
+    nestlvlmax := _opts.nestlvlmax or 4
+    nestchars := _opts.nestchars or ["|", "_"]
+    printfuncs := _opts.printfuncs
     indstr := inddef := " " nestchars[1] " "
 
     EvalIndent() {
@@ -73,7 +104,7 @@ __DBG__describe(_opts?, _objlist*) {
             ind .= " " nestchars[Mod(A_Index + nestchars.Length - 1, nestchars.Length) + 1] " "
         return ind
     }
-    
+
     TryStringOut(out_item) {
         ind := EvalIndent()
         Try
@@ -93,7 +124,7 @@ __DBG__describe(_opts?, _objlist*) {
         for _prop_name in _prop_names {
             if nestlvl < nestlvlmax {
                 out_str .= TryStringOut(_prop_name ":")
-                if ___DBG___.cfg.desc.verbosity >= 1 {
+                if _opts.verbosity >= 1 {
                     nestlvl++
                     try (out_str .= TryStringOut(_obj.%_prop_name%))
                     nestlvl--
@@ -106,37 +137,44 @@ __DBG__describe(_opts?, _objlist*) {
     CollectBaseProps(_obj) {
         out_str := ""
         _prop_names := []
-        for _prop_name in ObjOwnProps(ObjGetBase(_obj))
+        for _prop_name in ObjOwnProps(_obj and ObjGetBase(_obj) or {})
             _prop_names.Push _prop_name
         if not _prop_names.Length
             return ""
         out_str .= EvalIndent() "Props[Base]:`n"
         for _prop_name in _prop_names {
-            if nestlvl < nestlvlmax {
-                out_str .= EvalIndent() " " _prop_name
-                if ___DBG___.cfg.desc.verbosity >= 2 {
-                    propval := false
-                    try (_obj.%_prop_name%), propval:=_obj.%_prop_name%
-                    if propval {
-                        if propval is Primitive {
-                            nestcharspre := nestchars.CleanClone()
-                            nestchars := [""]
-                            out_str .= ":{" type(propval) "}: " (propval) "`n"
-                            nestchars := nestcharspre
-                        } else if propval is Func {
-                            nestcharspre := nestchars.CleanClone()
-                            nestchars := [""]
-                            out_str .= ":{" propval.__Class "}[" propval.name "]"
-                            if ___DBG___.cfg.desc.verbosity < 3
-                                out_str .= ":MN" propval.MinParams ":MX" propval.MaxParams 
-                                        . ":V" propval.IsVariadic ":O" propval.IsOptional()
-                                        . ":R" propval.IsByRef() "`n"
-                            nestchars := nestcharspre
-                        }
-                        else nestlvl++, out_str .= "`n" TryStringOut(propval), nestlvl--
-                    } else out_str .= "?`n"
-                }
-            } else out_str .= TryStringOut(_prop_name ": ...")
+            if nestlvl > nestlvlmax {
+                try out_type := type(_obj.%_prop_name%)
+                out_type := (out_type ?? false) is string and out_type.sub(1,1).upper() or "_.-=U=-._"
+                out_str .= TryStringOut(_prop_name ("?" out_type "?") " ... ")
+                return out_str
+            }
+            propval := false
+            try (_obj.%_prop_name%), propval:=_obj.%_prop_name%
+            if propval and propval is func and !_opts.printfuncs
+                continue
+            out_str .= EvalIndent() " " _prop_name
+            if _opts.verbosity < 2
+                return out_str
+            if not propval
+                return (out_str .= "?`n", out_str)
+            if propval is Primitive {
+                nestcharspre := nestchars.CleanClone()
+                nestchars := [""]
+                out_str .= ":{" type(propval) "}: " (propval) "`n"
+                nestchars := nestcharspre
+            } else if propval is Func {
+                nestcharspre := nestchars.CleanClone()
+                nestchars := [""]
+                out_str .= ":{" propval.__Class "}[" propval.name "]"
+                if _opts.verbosity < 3
+                    out_str .= ":MN" propval.MinParams ":MX" propval.MaxParams
+                            . ":V" propval.IsVariadic ":O" propval.IsOptional()
+                            . ":R" propval.IsByRef() "`n"
+                nestchars := nestcharspre
+            } else nestlvl++
+                 , out_str .= "`n" TryStringOut(propval)
+                 , nestlvl--
         }
         return out_str
     }
@@ -153,12 +191,12 @@ __DBG__describe(_opts?, _objlist*) {
     }
 
     TryEnumOut(_enum) {
-        
+
     }
 
     TryFuncOut(_func) {
         out_str := EvalIndent() "{" _func.__Class "}::"
-        if ___DBG___.cfg.desc.verbosity < 3
+        if _opts.verbosity < 3
             return out_str _func.MinParams "," _func.MaxParams "`n"
         out_str .= "`n"
         nestlvl++
@@ -185,7 +223,7 @@ __DBG__describe(_opts?, _objlist*) {
         out_str .= CollectOwnProps(out_item)
         nestlvl--
         return out_str
-        
+
     }
 
     for _itm in _objlist {
@@ -201,30 +239,39 @@ __DBG__describe(_opts?, _objlist*) {
  * @param {Array} _olist
  */
 dbgo(_olist*) {
-    OutputDebug __DBG__describe({}, _olist*)
+    static __dbgo_desc__  := ___DBG___.cfg.desc.clone()
+        ,  __dbgo__ := ___DBG___.cfg.dbgo.clone()
+        ,  ___ := ___DBG___.parseopts(&__dbgo_desc__, &__dbgo__,false)["opts"]
+    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__")
+        uopts := _olist[1]
+    else uopts := __dbgo_desc__.clone()
+    if ___DBG___.parseopts(&uopts, &__dbgo_desc__, false, true)
+        _olist:=_olist.fromrange(has_uopts:=2)
+
+    OutputDebug __DBG__describe(has_uopts ? uopts : __dbgo_desc__, _olist*)
 }
 
 dbgln(_olist*) {
-    opts := { 
-        __prefix__    : false
-      , nestlvlmax    : false
-      , nestchars     : false
-      , focusdebugview: false
-      , opendebugview : false
-      , __o__       : false 
+    static __dbgln_desc__  := ___DBG___.cfg.desc.clone()
+        ,  __dbgln__ := ___DBG___.cfg.dbgln.clone()
+        ,  ____ := ___DBG___.parseopts(&__dbgln_desc__, &__dbgln__,false)["opts"]
+    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__")
+        uopts := _olist[1]
+    else uopts := __dbgln_desc__.clone()
+    if ___DBG___.parseopts(&uopts, &__dbgln_desc__, false, true)
+        _olist:=_olist.fromrange(has_uopts:=2)
+
+    uopts := (has_uopts ? uopts : __dbgln_desc__)
+
+    if (!!uopts.opendebugview)
+        ___DBG___.bm.opendebugview()
+    if (!!uopts.focusdebugview) {
+        ___DBG___.bm.activatedebugview()
+        if !!uopts.focusprevwin
+            settimer(___DBG___.bm.activateprevwin, uopts.focusprevwintimeout.neg())
     }
-    if (_olist.length > 1) and ((first_item:=_olist[1]) is Object)
-        for _optname in ObjOwnProps(opts)
-            if ObjHasOwnProp(first_item, _optname)
-                (opts.%_optname% := first_item.%_optname%), ++opts.__o__
-    if opts.__o__ and (_olist := _olist.fromrange(2))
-        open_view:=(opts.opendebugview and ___DBG___.bm.opendebugview 
-                     or opts.focusdebugview and ___DBG___.bm.focusdebugview)
-    else open_view:=(___DBG___.cfg.dbgln.opendebugview and ___DBG___.bm.opendebugview 
-                      or ___DBG___.cfg.dbgln.focusdebugview and ___DBG___.bm.focusdebugview)
-    if open_view
-        open_view
-    loop parse, __DBG__describe(opts, _olist*), "`n", "`r"
+
+    loop parse, __DBG__describe(uopts?, _olist*), "`n", "`r"
         OutputDebug A_LoopField
 }
 
@@ -232,14 +279,32 @@ dbgln(_olist*) {
  * @param {Array} _olist
  */
 stdo(_olist*) {
-    FileAppend __DBG__describe({}, _olist*), "*", "utf-8"
+    static __stdo_desc__  := ___DBG___.cfg.desc.clone()
+        ,  __stdo__ := ___DBG___.cfg.stdo.clone()
+        ,  _____ := ___DBG___.parseopts(&__stdo_desc__, &__stdo__,false)["opts"]
+    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__")
+        uopts := _olist[1]
+    else uopts := __stdo_desc__.clone()
+    if ___DBG___.parseopts(&uopts, &__stdo_desc__, false, true)
+        _olist:=_olist.fromrange(has_uopts:=2)
+
+    FileAppend __DBG__describe(has_uopts ? uopts : __stdo_desc__, _olist*), "*", "utf-8"
 }
 
 /**
  * @param {Array} _olist
  */
 msgo(_olist*) {
-    MsgBox __DBG__describe({}, _olist*)
+    static __msgo_desc__  := ___DBG___.cfg.desc.clone()
+        ,  __msgo__ := ___DBG___.cfg.msgo.clone()
+        ,  ______ := ___DBG___.parseopts(&__msgo_desc__, &__msgo__,false)["opts"]
+    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__")
+        uopts := _olist[1]
+    else uopts := __msgo_desc__.clone()
+    if ___DBG___.parseopts(&uopts, &__msgo_desc__, false, true)
+        _olist:=_olist.fromrange(has_uopts:=2)
+
+    MsgBox __DBG__describe(has_uopts ? uopts : __msgo_desc__, _olist*)
 }
 
 
@@ -288,5 +353,29 @@ Class PerfCounter {
         if this.ms
             this.ToMilliseconds(&counter)
         Return counter
+    }
+}
+
+Class PerformanceCounter {
+    _start := 0
+    _stop  := 0
+    __new(_start_immediately:=true) {
+        this.freq := this.__get_frequency__()
+        if _start_immediately
+            this.setstart()
+    }
+    setstart() => (this._start := this.now, dbgln(A_LineFile, "PerformanceCounter::started:: " this._start), this._start)
+    setstop() => (this._stop := this.now, dbgln(A_LineFile, "PerformanceCounter::stopped::", "start::`t`t`t" this._start, "stop::`t`t`t`t" this._stop, "elapsed::`t" this.elapsed["min"]), this._stop)
+    elapsed[_tscale:="raw"] => (this._stop - this._start) * this.__calc_counter_mul__(_tscale)
+    now[_tscale:="raw"] => this.__get_counter__() * this.__calc_counter_mul__(_tscale)
+    delta[_tscale:="raw"] => (this.now - this._start) * this.__calc_counter_mul__(_tscale)
+    __calc_counter_mul__(_tscale:="raw") => ( (_tscale ~= "m[ls]") ? (1 / this.freq) * (1000) :
+                                              (_tscale ~= "se?c?") ? (1 / this.freq) * (1000/1000**1) :
+                                              (_tscale ~= "mi?n?") ? (1 / this.freq) * (1000/1000**2) :
+                                              (_tscale ~= "h[r]?") ? (1 / this.freq) * (1000/1000**3) : 1 )
+    __get_frequency__() => (dllcall("QueryPerformanceFrequency", "int*", &freq := 0), freq)
+    __get_counter__() {
+        dllcall "QueryPerformanceCounter", "int*", &counter := 0
+        return counter
     }
 }
