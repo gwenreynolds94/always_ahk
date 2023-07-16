@@ -228,6 +228,25 @@ class winwiz {
         send "{Enter}"
     }
 
+    static swap(_wtitle1, _wtitle2) {
+        hwnd1 := winexist(_wtitle1)
+        hwnd2 := winexist(_wtitle2)
+        w1 := wincache[hwnd1]
+        w2 := wincache[hwnd2]
+        nrect1 := vector4.rect(w2.rect*).add(w1.frameboundsmarginrect)
+        nrect2 := vector4.rect(w1.rect*).add(w2.frameboundsmarginrect)
+        winwiz.dll.setwindowpos(hwnd1,,nrect1*)
+        winwiz.dll.setwindowpos(hwnd2,,nrect2*)
+    }
+
+    static swaponpress(_key:="LButton") {
+        onpress(_wtitle1, __key, *) {
+            winwiz.swap(_wtitle1, winwiz.mousewintitle)
+            hotkey __key, "off"
+        }
+        hotkey _key, onpress.bind(winwiz.mousewintitle, _key), "on"
+    }
+
     class drag {
         static home := { win : false
                   ,   winpos : vector2.pos()

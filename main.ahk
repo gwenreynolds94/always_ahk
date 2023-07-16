@@ -135,6 +135,7 @@ class gen {
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
         kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
         kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
+        kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
 
         kl := this.kl
 
@@ -170,6 +171,10 @@ class gen {
         kt.hotki("AppsKey & \", this.knto.bm.toggle)
 
         coordmode "tooltip", "screen"
+    }
+
+    swapwindowdims(*) {
+         
     }
 }
 
