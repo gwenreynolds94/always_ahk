@@ -137,6 +137,9 @@ class gen {
         kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
 
+        winwiz.drag.setholdtomove("!+LButton")
+        winwiz.drag.setholdtosize("!+RButton")
+
         kl := this.kl
 
         kl.pathki(["w", "w"], anims.slide.bm.call.bind(anims.full          ))

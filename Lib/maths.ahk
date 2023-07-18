@@ -77,9 +77,7 @@ class Math {
         Mul(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2 * __v1), _v1, _v2?, _v3?, _v4?)
         Min(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2.min(__v1)), _v1, _v2?, _v3?, _v4?)
         Max(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2.max(__v1)), _v1, _v2?, _v3?, _v4?)
-        Set(_v1, _v2?, _v3?, _v4?)=>(this.anon4((__v2,__v1)=>(__v1), _v1, _v2?, _v3?, _v4?), 
-                                     this.__numtype__:=this.__numtype__, 
-                                     this)
+        Set(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v1), _v1, _v2?, _v3?, _v4?)
 
         __enum(_vcnt:=2) {
             _enum_(_vcount, &_v1?, &_v2?, &_v3?, &_v4?) {
