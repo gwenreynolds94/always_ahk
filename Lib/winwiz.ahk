@@ -253,20 +253,20 @@ class winwiz {
                   ,  winsize : vector2.size()
                   , fbndsoff : vector4.rect()
                   , mousepos : vector2.pos() }
-        , ismoving := false
-        , issizing := false
-        , holdtomove := "LButton"
-        , holdtosize := "RButton"
-        , _move_enabled_ := false
-        , _move_hotif_ := false
-        , _size_enabled_ := false
-        , _size_hotif_ := false
-        , timerinterval := 10
-        , min_size := vector2.size(100, 100)
-        , bm := {
-            movestart: objbindmethod(this, "movestart")
-          , sizestart: objbindmethod(this, "sizestart")
-        }
+            ,  ismoving := false
+            ,  issizing := false
+            ,  holdtomove := "LButton"
+            ,  holdtosize := "RButton"
+            ,  _move_enabled_ := false
+            ,  _move_hotif_ := false
+            ,  _size_enabled_ := false
+            ,  _size_hotif_ := false
+            ,  timerinterval := 10
+            ,  min_size := vector2.size(100, 100)
+            ,  bm := {
+                 movestart: objbindmethod(this, "movestart")
+            ,  sizestart: objbindmethod(this, "sizestart")
+            }
         static move_enabled => this._move_enabled_
         static size_enabled => this._size_enabled_
         static move_hotif => this._move_hotif_
@@ -308,15 +308,18 @@ class winwiz {
             this.home.mousepos.set(winwiz.dll.mouse.cursorpos)
             settimer _moving_, this.timerinterval
             _moving_(*) {
-                if !getkeystate(this.holdtomove.Replace("^[\+\!\#\^]+"), "P")
-                    return (settimer(,0), this.ismoving := false)
+                if !getkeystate(this.holdtomove.Replace("^[\+\!\#\^]+"), "P") {
+                    settimer(,0)
+                    this.ismoving := false
+                    return
+                }
                 deltapos.set(winwiz.dll.mouse.cursorpos).sub(this.home.mousepos)
                 newpos.set(this.home.winpos).add(deltapos).add(this.home.fbndsoff)
                 winwiz.dll.setwindowpos(this.home.win, 0, newpos*)
             }
         }
         static sizestart(*) {
-            static newsize := vector2.size(), deltasize := vector2.size()
+            static deltasize := vector2.size(), newsize := vector2.size()
             this.issizing := true
             this.home.win := winwiz.mousewin
             this.home.winsize.set(this.home.win.rect)
