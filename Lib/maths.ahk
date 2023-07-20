@@ -195,12 +195,12 @@ class Vector4 extends Math.Vector {
         __propslist__ => ["x", "y", "w", "h"]
         __altpropslist__ => vector4.rect.corners.prototype.__propslist__
         __new(_x?, _y?, _w?, _h?) {
-                Math.Vector.Prototype.__new.call(this, _x ?? 0, _y?, _w?, _h?)
-                this.deleteprop "z"
-                this.defineprop "l", { get: (*)=> this.x }
-                this.defineprop "t", { get: (*)=> this.y }
-                this.defineprop "r", { get: (*)=> this.w + this.x }
-                this.defineprop "b", { get: (*)=> this.h + this.y }
+            Math.Vector.Prototype.__new.call(this, _x ?? 0, _y?, _w?, _h?)
+            this.deleteprop "z"
+            this.defineprop "l", { get: (*)=> this.x }
+            this.defineprop "t", { get: (*)=> this.y }
+            this.defineprop "r", { get: (*)=> this.w + this.x }
+            this.defineprop "b", { get: (*)=> this.h + this.y }
         }
         Cornered => vector4.rect.corners(this.l, this.t, this.r, this.b)
         Size => vector2.size(this.w, this.h)

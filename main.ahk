@@ -18,6 +18,7 @@ setwindelay 0
 #Include <kitable>
 #Include <quiktip>
 #Include <volctrl>
+#Include <sys>
 
 
 exitaction(_exit_reason:="", *) {
@@ -104,25 +105,25 @@ class gen {
             */
          , anims:= {_:0
                ,           full: []
-               ,       leftfull: []
-               ,   lefthalfleft: []
-               ,  righthalfleft: []
-               , righthalfright: []
-               ,  lefthalfright: []
-               ,      rightfull: []
-               ,       miscanim: vector4.rect()
+               ,       left_full: []
+               ,   left_half_left: []
+               ,  right_half_left: []
+               , right_half_right: []
+               ,  left_half_right: []
+               ,      right_full: []
+               ,       misc_anim: vector4.rect()
                ,          slide: winwiz.slide()
            }
 
     static __new() {
-        anims := this.anims
-        anfull   := anims.full := [anims.miscanim.set(5, 5, a_screenwidth * 2 - 10, a_screenheight - 10)*]
-        anlfull  := anims.leftfull := [anims.miscanim.set(5, 5, a_screenwidth - 10, a_screenheight - 10)*]
-        anrfull  := anims.rightfull := [anims.miscanim.set(anlfull*).add(a_screenwidth,0,0,0)*]
-        anlhalfl := anims.lefthalfleft := [anims.miscanim.set(anlfull*).mul(1,1,0.5,1)*]
-        anlhalfr := anims.lefthalfright := [anims.miscanim.set(anlhalfl*).add(anlhalfl[3],0,0,0)*]
-        anrhalfl := anims.righthalfleft := [anims.miscanim.set(anlhalfl*).add(a_screenwidth,0,0,0)*]
-        anrhalfr := anims.righthalfright := [anims.miscanim.set(anlhalfr*).add(a_screenwidth,0,0,0)*]
+        anims:=this.anims
+        anim_full:=anims.full:=[anims.misc_anim.set(5,5,a_screenwidth*2-10,a_screenheight-10)*]
+        anim_left_full:=anims.left_full:=[anims.misc_anim.set(5,5,a_screenwidth-10,a_screenheight-10)*]
+        anim_right_full:=anims.right_full:=[anims.misc_anim.set(anim_left_full*).add(a_screenwidth,0,0,0)*]
+        anim_left_half_left:=anims.left_half_left:=[anims.misc_anim.set(anim_left_full*).mul(1,1,0.5,1)*]
+        anim_left_half_right:=anims.left_half_right:=[anims.misc_anim.set(anim_left_half_left*).add(anim_left_half_left[3],0,0,0)*]
+        anim_right_half_left:=anims.right_half_left:=[anims.misc_anim.set(anim_left_half_left*).add(a_screenwidth,0,0,0)*]
+        anim_right_half_right:=anims.right_half_right:=[anims.misc_anim.set(anim_left_half_right*).add(a_screenwidth,0,0,0)*]
 
         kt := this.kt
 
@@ -143,12 +144,12 @@ class gen {
         kl := this.kl
 
         kl.pathki(["w", "w"], anims.slide.bm.call.bind(anims.full          ))
-        kl.pathki(["w", "q"], anims.slide.bm.call.bind(anims.leftfull      ))
-        kl.pathki(["w", "e"], anims.slide.bm.call.bind(anims.rightfull     ))
-        kl.pathki(["w", "a"], anims.slide.bm.call.bind(anims.lefthalfleft  ))
-        kl.pathki(["w", "s"], anims.slide.bm.call.bind(anims.lefthalfright ))
-        kl.pathki(["w", "d"], anims.slide.bm.call.bind(anims.righthalfleft ))
-        kl.pathki(["w", "f"], anims.slide.bm.call.bind(anims.righthalfright))
+        kl.pathki(["w", "q"], anims.slide.bm.call.bind(anims.left_full      ))
+        kl.pathki(["w", "e"], anims.slide.bm.call.bind(anims.right_full     ))
+        kl.pathki(["w", "a"], anims.slide.bm.call.bind(anims.left_half_left  ))
+        kl.pathki(["w", "s"], anims.slide.bm.call.bind(anims.left_half_right ))
+        kl.pathki(["w", "d"], anims.slide.bm.call.bind(anims.right_half_left ))
+        kl.pathki(["w", "f"], anims.slide.bm.call.bind(anims.right_half_right))
 
         kl.pathki(["t", "w", "e"], wez.kt.bm.toggle)
         kl.pathki(["a", "h", "h"], winwiz.bm.searchv2docs.bind(0, 0))

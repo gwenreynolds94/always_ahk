@@ -147,8 +147,14 @@ class winwiz {
         if (winlen := targwins.length) < 1
             return false
         dest_index := _reverse ? winlen : 2
-        if (dest_index = 2) and winlen > dest_index
+        if (dest_index = 2) and winlen > dest_index {
+            lasthwnd := targwins[winlen]
+            udwinlist := wingetlist()
+            lastindex := udwinlist.IndexOf(lasthwnd)
+            if lastindex
+                ; ...
             this.insertafter(targwins[1], targwins[winlen])
+        }
         winactivate targwins[dest_index]
         return true
     }
