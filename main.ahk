@@ -157,6 +157,8 @@ class gen {
         kl.pathki(["a", "o", "t"], (*)=>(wincache["A"].alwaysontop := 1))
         kl.pathki(["n", "o", "t"], (*)=>(wincache["A"].alwaysontop := 0))
         kl.pathki(["k", "l", "l"], winwiz.bm.winkillclass.bind("", 2))
+        kl.pathki(["o", "e", "n", "v"], sys.bm.launch_env_vars)
+        kl.pathki(["o", "e", "n", "p"], sys.bm.launch_env_path)
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
         kl.progki(["o", "b", "c", "b"], A_ScriptDir "\Apps\BCV2\BCV2.exe")
