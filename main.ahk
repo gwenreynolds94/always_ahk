@@ -5,7 +5,7 @@
 #Warn LocalSameAsGlobal, OutputDebug
 #SingleInstance Force
 
-outputdebug "
+outputdebug A_Hour "." A_Min "." A_Sec "." A_MSec "`n" . "
 (ltrim
     |>|>|>|>|>__always_ahk__|>|>|>|>|>__starting__|>|>|>|>|>
 )"
@@ -177,10 +177,6 @@ class gen {
         kt.hotki("AppsKey & \", this.knto.bm.toggle)
 
         coordmode "tooltip", "screen"
-    }
-
-    swapwindowdims(*) {
-         
     }
 }
 

@@ -146,14 +146,14 @@ class winwiz {
             targwins := this.winlist
         if (winlen := targwins.length) < 1
             return false
-        dest_index := _reverse ? winlen : 2
+        dest_index := _reverse ? winlen : (winlen > 1) ? 2 : 1
         if (dest_index = 2) and winlen > dest_index {
             lasthwnd := targwins[winlen]
             udwinlist := wingetlist()
             lastindex := udwinlist.IndexOf(lasthwnd)
             if lastindex
-                ; ...
-            this.insertafter(targwins[1], targwins[winlen])
+                this.insertafter(targwins[1], udwinlist[lastindex + 1])
+            else this.insertafter(targwins[1], targwins[winlen])
         }
         winactivate targwins[dest_index]
         return true
@@ -235,14 +235,17 @@ class winwiz {
     }
 
     static swap(_wtitle1, _wtitle2) {
+        static SWP := winwiz.dll.setwindowpos.SWP
         hwnd1 := winexist(_wtitle1)
         hwnd2 := winexist(_wtitle2)
         w1 := wincache[hwnd1]
         w2 := wincache[hwnd2]
         nrect1 := vector4.rect(w2.rect*).add(w1.frameboundsmarginrect)
         nrect2 := vector4.rect(w1.rect*).add(w2.frameboundsmarginrect)
-        winwiz.dll.setwindowpos(hwnd1,,nrect1*)
-        winwiz.dll.setwindowpos(hwnd2,,nrect2*)
+        winwiz.dll.setwindowpos(hwnd1,,[nrect1*].extend(SWP.SHOWWINDOW | SWP.FRAMECHANGED)*)
+        winwiz.dll.setwindowpos(hwnd2,,[nrect2*].extend(SWP.SHOWWINDOW | SWP.FRAMECHANGED)*)
+        winactivate hwnd2
+        winactivate hwnd1
     }
 
     static swaponpress(_key:="LButton") {
@@ -267,7 +270,7 @@ class winwiz {
             ,  _move_hotif_ := false
             ,  _size_enabled_ := false
             ,  _size_hotif_ := false
-            ,  timerinterval := 10
+            ,  timerinterval := 1
             ,  min_size := vector2.size(100, 100)
             ,  bm := {
                  movestart: objbindmethod(this, "movestart")
@@ -309,7 +312,7 @@ class winwiz {
             static deltapos := vector2.pos(), newpos := vector2.pos()
             this.ismoving := true
             this.home.win := winwiz.mousewin
-            this.home.winpos.set(this.home.win.rect.pos)
+            this.home.winpos.set(this.home.win.rect)
             this.home.fbndsoff.set(this.home.win.frameboundsmarginrect)
             this.home.mousepos.set(winwiz.dll.mouse.cursorpos)
             settimer _moving_, this.timerinterval
@@ -341,7 +344,7 @@ class winwiz {
                     return
                 }
                 deltasize.set(winwiz.dll.mouse.cursorpos*).sub(this.home.mousepos*)
-                newsize.set(this.home.winsize).add(deltasize*)
+                newsize.set(this.home.winsize).add(deltasize*).add(this.home.fbndsoff)
                 winwiz.dll.setwindowpos(this.home.win, 0,,, newsize*)
             }
         }
@@ -400,7 +403,7 @@ class winwiz {
                 _hwnd := winexist(_hwnd or "A")
 
                 if not isset(_uflags) {
-                    uflags := this.SWP.NOACTIVATE
+                    uflags := this.SWP.FRAMECHANGED|this.SWP.SHOWWINDOW
                 } else if _uflags is number
                     uflags := _uflags
 

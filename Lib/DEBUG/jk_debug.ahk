@@ -11,7 +11,7 @@ class ___DBG___ {
     static cfg := {
         desc: {
             __o__: 1,
-            nestlvlmax: 6,
+            nestlvlmax: 3,
             nestchars: ["|", ":"],
             verbosity: 2,
             printfuncs: true
@@ -24,6 +24,10 @@ class ___DBG___ {
         dbgln: {
             __o__: 1,
             focusdebugview: true,
+            nestlvlmax: 3,
+            nestchars: ["|", ":"],
+            verbosity: 2,
+            printfuncs: true,
             opendebugview: true,
             focusprevwin: false,
             focusprevwintimeout: 2222
@@ -67,7 +71,7 @@ class ___DBG___ {
             run _exe_path,,, &_dbgview_pid:=0
             winwait "ahk_pid " _dbgview_pid
             winactivate "ahk_pid " _dbgview_pid
-        } 
+        }
     }
 
     static prevwin => (
@@ -93,8 +97,9 @@ __DBG__describe(_opts?, _objlist*) {
     desc := ""
     _opts := (_opts ?? false) or ___DBG___.cfg.desc.clone()
     nestlvl := 0
-    nestlvlmax := _opts.nestlvlmax or 4
-    nestchars := _opts.nestchars or ["|", "_"]
+    verbosity := _opts.verbosity
+    nestlvlmax := _opts.nestlvlmax
+    nestchars := _opts.nestchars
     printfuncs := _opts.printfuncs
     indstr := inddef := " " nestchars[1] " "
 
@@ -103,6 +108,11 @@ __DBG__describe(_opts?, _objlist*) {
         loop nestlvl
             ind .= " " nestchars[Mod(A_Index + nestchars.Length - 1, nestchars.Length) + 1] " "
         return ind
+    }
+
+    EvalPastMax(_nestlvl?) {
+        pastnestmax := ((_nestlvl ?? nestlvl) > (nestlvlmax))
+        return pastnestmax
     }
 
     TryStringOut(out_item) {
@@ -120,16 +130,26 @@ __DBG__describe(_opts?, _objlist*) {
             _prop_names.Push _prop_name
         if not _prop_names.Length
             return ""
+        if EvalPastMax()
+            return EvalIndent() "Props[Prototype][" _prop_names.Length "]...`n"
         out_str .= EvalIndent() "Props[Prototype]:`n"
         for _prop_name in _prop_names {
-            if nestlvl < nestlvlmax {
-                out_str .= TryStringOut(_prop_name ":")
-                if _opts.verbosity >= 1 {
+            if EvalPastMax() {
+                out_str .= TryStringOut(_prop_name ": ...")
+            } else {
+                out_str .= EvalIndent() " " _prop_name
+                if verbosity >= 1 {
                     nestlvl++
-                    try (out_str .= TryStringOut(_obj.%_prop_name%))
+                    if EvalPastMax()
+                        out_str .= "...`n"
+                    else {
+                        try (out_str .= "`n" TryStringOut(_obj.%_prop_name%))
+                        catch
+                            out_str .= "`n"
+                    }
                     nestlvl--
                 }
-            } else out_str .= TryStringOut(_prop_name ": ...")
+            }
         }
         return out_str
     }
@@ -141,21 +161,21 @@ __DBG__describe(_opts?, _objlist*) {
             _prop_names.Push _prop_name
         if not _prop_names.Length
             return ""
+        if EvalPastMax()
+            return EvalIndent() "Props[Base][" _prop_names.Length "]...`n"
         out_str .= EvalIndent() "Props[Base]:`n"
         for _prop_name in _prop_names {
-            if nestlvl > nestlvlmax {
+            if EvalPastMax() {
                 try out_type := type(_obj.%_prop_name%)
                 out_type := (out_type ?? false) is string and out_type.sub(1,1).upper() or "_.-=U=-._"
-                out_str .= TryStringOut(_prop_name ("?" out_type "?") " ... ")
+                out_str .= TryStringOut(_prop_name ("@" out_type "@") " ... ")
                 return out_str
             }
             propval := false
             try (_obj.%_prop_name%), propval:=_obj.%_prop_name%
-            if propval and propval is func and !_opts.printfuncs
+            if propval and propval is func and !printfuncs
                 continue
             out_str .= EvalIndent() " " _prop_name
-            if _opts.verbosity < 2
-                return out_str
             if not propval
                 return (out_str .= "?`n", out_str)
             if propval is Primitive {
@@ -167,14 +187,18 @@ __DBG__describe(_opts?, _objlist*) {
                 nestcharspre := nestchars.CleanClone()
                 nestchars := [""]
                 out_str .= ":{" propval.__Class "}[" propval.name "]"
-                if _opts.verbosity < 3
+                if verbosity < 3
                     out_str .= ":MN" propval.MinParams ":MX" propval.MaxParams
                             . ":V" propval.IsVariadic ":O" propval.IsOptional()
                             . ":R" propval.IsByRef() "`n"
                 nestchars := nestcharspre
-            } else nestlvl++
-                 , out_str .= "`n" TryStringOut(propval)
-                 , nestlvl--
+            } else {
+                nestlvl++
+                if EvalPastMax()
+                    out_str .= "...`n"
+                else out_str .= "`n" TryStringOut(propval)
+                nestlvl--
+            }
         }
         return out_str
     }
@@ -196,7 +220,7 @@ __DBG__describe(_opts?, _objlist*) {
 
     TryFuncOut(_func) {
         out_str := EvalIndent() "{" _func.__Class "}::"
-        if _opts.verbosity < 3
+        if verbosity < 3
             return out_str _func.MinParams "," _func.MaxParams "`n"
         out_str .= "`n"
         nestlvl++
@@ -208,10 +232,13 @@ __DBG__describe(_opts?, _objlist*) {
 
     TryObjectOut(out_item) {
         nestcharspre := nestchars.CleanClone()
-        nestchars := ["=", "-"]
-        out_str := EvalIndent() "{" out_item.__Class "}::`n"
+        nestchars := ["|", "*"]
+        out_str := EvalIndent() "{" out_item.__Class "}::"
         nestchars := nestcharspre
         nestlvl++
+        if EvalPastMax(nestlvl)
+            return (nestlvl--, out_str "...`n")
+        else out_str .= "`n"
         if type(out_item) ~= "[aA]rray" {
             out_str .= EvalIndent() "Items[" out_item.Length "]:`n"
             for itm in out_item
@@ -364,8 +391,13 @@ Class PerformanceCounter {
         if _start_immediately
             this.setstart()
     }
-    setstart() => (this._start := this.now, dbgln(A_LineFile, "PerformanceCounter::started:: " this._start), this._start)
-    setstop() => (this._stop := this.now, dbgln(A_LineFile, "PerformanceCounter::stopped::", "start::`t`t`t" this._start, "stop::`t`t`t`t" this._stop, "elapsed::`t" this.elapsed["min"]), this._stop)
+    setstart() => (this._start := this.now, dbgln(A_LineFile, 
+                           "PerformanceCounter::started:: " this._start), this._start)
+    setstop() => (this._stop := this.now, dbgln(A_LineFile,
+                           "PerformanceCounter::stopped::",
+                           "start::`t`t`t" this._start,
+                           "stop::`t`t`t`t" this._stop,
+                           "elapsed::`t" this.elapsed["min"]), this._stop)
     elapsed[_tscale:="raw"] => (this._stop - this._start) * this.__calc_counter_mul__(_tscale)
     now[_tscale:="raw"] => this.__get_counter__() * this.__calc_counter_mul__(_tscale)
     delta[_tscale:="raw"] => (this.now - this._start) * this.__calc_counter_mul__(_tscale)

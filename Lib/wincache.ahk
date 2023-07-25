@@ -11,29 +11,29 @@ class wincache {
     static _item_cache_ := Map()
 
     static __item[_win_title, _winwrapr_prop?] {
+
         get {
-            _foreach(_value, _index, _this) {
-                if not wincache._item_cache_.has(_value)
-                    return (newwin:=winwrapper(_value)).exists and newwin
-                return ( wincache._item_cache_[_value].exists ?
-                                    ( isset(_winwrapr_prop) &&
-                                        !!([objownprops( wincache._item_cache_[_value]
-                                )*].IndexOf(_winwrapr_prop)) &&
-                                    wincache._item_cache_[_value].%_winwrapr_prop%
-                            ) : wincache._item_cache_[_value] )
-            }
-            _win_title := (_win_title = "A") ? winexist(_win_title) : _win_title
-            if _win_title is number
+            _win_title := (_win_title = "A") ? winexist("A") : _win_title
+            if _win_title and (_win_title is number) {
                 if this._item_cache_.has(_win_title) and this._item_cache_[_win_title].exists
                     return this._item_cache_[_win_title]
                 else if (newwin:=winwrapper(_win_title)).exists
                     return (this._item_cache_[_win_title]:=newwin)
                 else return false
-            /**
-             * @type {array}
-             */
-            wlist := winwiz.winlist[_win_title]
-            return wlist.ForEach(_foreach).Filter((_value)=>(!!_value))
+            }
+            wlist := !!_win_title ? winwiz.winlist[_win_title] : winwiz.winlist
+            rwlist := []
+            haswraprprop := isset(_winwrapr_prop)
+            for _hwnd in wlist {
+                if not wincache._item_cache_.has(_hwnd)
+                    rwlist.push(wincache._item_cache_[_hwnd]:=winwrapper(_hwnd))
+                else if wincache._item_cache_[_hwnd].exists {
+                    if haswraprprop
+                        rwlist.push(wincache._item_cache_[_hwnd].%_winwrapr_prop%)
+                    else rwlist.push(wincache._item_cache_[_hwnd])
+                }
+            }
+            return rwlist
         }
     }
 
@@ -89,14 +89,16 @@ class winwrapper {
 
     __new(_window_title:="") {
         this.hwnd := winexist(_window_title)
-        if this.hwnd
-            this._rect := winwiz.dll.getwindowrect.framebounds(this.hwnd).Rectified
+        if !this.hwnd
+            return
+        (this.exe), (this.class), (this.rect), (this.title)
+        (this.frameboundsmargincorners), (this.frameboundsmarginrect)
     }
 
     exists => (this.hwnd and winexist(this))
-    title => this.hwnd and this._title or (this._title:=wingettitle(this.hwnd))
-    exe => this.hwnd and this._exe or (this._exe:=wingetprocessname(this.hwnd))
-    class => this.hwnd and this._class or (this._class:=wingetclass(this.hwnd))
+    title => (this.hwnd and this._title) or (this._title:=wingettitle(this.hwnd))
+    exe => (this.hwnd and this._exe) or (this._exe:=wingetprocessname(this.hwnd))
+    class => (this.hwnd and this._class) or (this._class:=wingetclass(this.hwnd))
 
     ancestor[_GA_ANCESTOR:="PARENT"] {
         get {
@@ -104,17 +106,27 @@ class winwrapper {
             return dllcall("GetAncestor", "ptr", this.hwnd, "uint", %("GA_" _GA_ANCESTOR)%)
         }
     }
-    rect[_return_previous:=false] => (
-        (_return_previous and this._rect) or (this._rect :=
+    rect[_return_previous:=false] {
+        get => ((_return_previous and this._rect) or (this._rect :=
             winwiz.dll.getwindowrect.framebounds(this.hwnd).Rectified ))
-    frameboundsmargincorners[_return_previous:=true] => (
-        (_return_previous and this._frameboundsoffset) or (this._frameboundsoffset :=
+    }
+    frameboundsmargincorners[_return_previous:=false] {
+        get => ((_return_previous and this._frameboundsoffset) or (this._frameboundsoffset :=
             winwiz.dll.dwmgetwindowattribute.extendedframeboundsoffset(this.hwnd) ))
-    frameboundsmarginrect[_return_previous:=true] => (
-        (_return_previous and this._frameboundsmargin) or (this._frameboundsmargin :=
+    }
+    frameboundsmarginrect[_return_previous:=false] {
+        get => ((_return_previous and this._frameboundsmargin) or (this._frameboundsmargin :=
             winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd) ))
+    }
 
     alwaysontop {
         set => WinSetAlwaysOnTop(value, this.hwnd)
     }
+}
+#Include DEBUG\jk_debug.ahk
+^0::{
+    dbgln({__o__:1,printfuncs:0, nestlvlmax:2},("*-".repeat(66) "`n").repeat(5), wincache*)
+}
+^9::{
+    dbgln({__o__:1,nestlvlmax:8},("*--".repeat(30)), wincache)
 }
