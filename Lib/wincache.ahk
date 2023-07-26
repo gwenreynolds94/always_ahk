@@ -25,8 +25,11 @@ class wincache {
             rwlist := []
             haswraprprop := isset(_winwrapr_prop)
             for _hwnd in wlist {
-                if not wincache._item_cache_.has(_hwnd)
-                    rwlist.push(wincache._item_cache_[_hwnd]:=winwrapper(_hwnd))
+                if not wincache._item_cache_.has(_hwnd) {
+                    if haswraprprop
+                        rwlist.push((wincache._item_cache_[_hwnd]:=winwrapper(_hwnd)).%_winwrapr_prop%)
+                    else rwlist.push(wincache._item_cache_[_hwnd]:=winwrapper(_hwnd))
+                }
                 else if wincache._item_cache_[_hwnd].exists {
                     if haswraprprop
                         rwlist.push(wincache._item_cache_[_hwnd].%_winwrapr_prop%)
@@ -81,10 +84,12 @@ class wincache {
 class winwrapper {
     _frameboundsoffset := false
     _frameboundsmargin := false
+    _alwaysontop := false
     _rect     := false
     _exe      := ""
     _title    := ""
     _class    := ""
+    _transparency := 255
     hwnd      := 0x0
 
     __new(_window_title:="") {
@@ -120,7 +125,13 @@ class winwrapper {
     }
 
     alwaysontop {
-        set => WinSetAlwaysOnTop(value, this.hwnd)
+        get => this._alwaysontop
+        set => WinSetAlwaysOnTop(this._alwaysontop:=value, this.hwnd)
+    }
+
+    transparency[_return_previous:=false] {
+        get => ((_return_previous and this._transparency) or (this._transparency:=wingettransparent(this.hwnd)))
+        set => winsettransparent(this._transparency:=value, this.hwnd)
     }
 }
 #Include DEBUG\jk_debug.ahk
