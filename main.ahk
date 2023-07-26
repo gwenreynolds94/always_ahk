@@ -15,6 +15,7 @@ setwindelay 0
 #Include <builtins_extended>
 #Include <config_tool>
 #Include <winwiz>
+#Include <wintrans>
 #Include <kitable>
 #Include <quiktip>
 #Include <volctrl>
@@ -137,6 +138,8 @@ class gen {
         kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
         kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
+        kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
+        kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
 
         winwiz.drag.setholdtomove("!+LButton")
         winwiz.drag.setholdtosize("!+RButton")
@@ -157,10 +160,13 @@ class gen {
         kl.pathki(["a", "o", "t"], (*)=>(wincache["A"].alwaysontop := 1))
         kl.pathki(["n", "o", "t"], (*)=>(wincache["A"].alwaysontop := 0))
         kl.pathki(["k", "l", "l"], winwiz.bm.winkillclass.bind("", 2))
+
         kl.pathki(["o", "e", "n", "v"], sys.bm.launch_env_vars)
         kl.pathki(["o", "e", "n", "p"], sys.bm.launch_env_path)
+
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
+
         kl.progki(["o", "b", "c", "b"], A_ScriptDir "\Apps\BCV2\BCV2.exe")
 
         ffkt := this.ffkt
@@ -173,6 +179,10 @@ class gen {
 
         knto.hotki(",", winwiz.bm.loopwindows.bind(0,"",0,0))
         knto.hotki(".", winwiz.bm.loopwindows.bind(1,"",0,0))
+        knto.hotki(";", wintrans.fade.bm.stepall.bind(true))
+        knto.hotki("'", wintrans.fade.bm.stepall.bind(false))
+        knto.hotki("!;", wintrans.fade.bm.setall.bind(255))
+
 
         kt.hotki("AppsKey & \", this.knto.bm.toggle)
 

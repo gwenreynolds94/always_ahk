@@ -132,7 +132,7 @@ class winwrapper {
     transparency[_return_previous:=false] {
         get => ((_return_previous and this._transparency) or (this._transparency :=
             (wingettransparent(this.hwnd) or 255)))
-        set => winsettransparent(this._transparency:=value, this.hwnd)
+        set => winsettransparent(this._transparency:=integer(value), this.hwnd)
     }
 }
 #Include DEBUG\jk_debug.ahk

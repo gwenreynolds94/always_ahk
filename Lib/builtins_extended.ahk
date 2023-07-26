@@ -138,7 +138,7 @@ Class __Array extends Array {
     IndexOf(_value) {
         found := False
         for _i, _v in this
-            found := (_v = _value) ? _i : found
+            found := ((_v = _value) ? _i : found)
         return found
     }
 
