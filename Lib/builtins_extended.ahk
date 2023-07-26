@@ -40,6 +40,15 @@ Class __Number extends Number {
         return this
     }
 
+    Nearest(_numbers*) {
+        closest_number := _numbers.length ? _numbers[1] : Number(this)
+        for _nbr in _numbers {
+            if (_nbr - this).abs() < (closest_number - this).abs()
+                closest_number := _nbr
+        }
+        return closest_number
+    }
+
     Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
     Min(_values*) => Min(this, _values*)
     Max(_values*) => Max(this, _values*)

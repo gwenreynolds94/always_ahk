@@ -96,7 +96,7 @@ class winwrapper {
         this.hwnd := winexist(_window_title)
         if !this.hwnd
             return
-        (this.exe), (this.class), (this.rect), (this.title)
+        (this.exe), (this.class), (this.rect), (this.title), (this.transparency)
         (this.frameboundsmargincorners), (this.frameboundsmarginrect)
     }
 
@@ -130,7 +130,8 @@ class winwrapper {
     }
 
     transparency[_return_previous:=false] {
-        get => ((_return_previous and this._transparency) or (this._transparency:=wingettransparent(this.hwnd)))
+        get => ((_return_previous and this._transparency) or (this._transparency :=
+            (wingettransparent(this.hwnd) or 255)))
         set => winsettransparent(this._transparency:=value, this.hwnd)
     }
 }
@@ -139,5 +140,5 @@ class winwrapper {
     dbgln({__o__:1,printfuncs:0, nestlvlmax:2},("*-".repeat(66) "`n").repeat(5), wincache*)
 }
 ^9::{
-    dbgln({__o__:1,nestlvlmax:8},("*--".repeat(30)), wincache)
+    dbgln({__o__:1,nestlvlmax:4},("*--".repeat(30)), wincache["A"])
 }
