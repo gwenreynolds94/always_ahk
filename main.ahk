@@ -150,12 +150,12 @@ class gen {
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
         kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
-        kt.hotki "sc029 & Left", "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"
-        kt.hotki "sc029 & Down", "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"
-        kt.hotki "sc029 & Right", "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"
-        kt.hotki "sc029 & LButton", "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"
-        kt.hotki "sc029 & MButton", "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"
-        kt.hotki "sc029 & RButton", "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & Left", (*)=>(keywait("sc029"), send("{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
+        kt.hotki "sc029 & Down", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
+        kt.hotki "sc029 & Right", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
+        kt.hotki "sc029 & LButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
+        kt.hotki "sc029 & MButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
+        kt.hotki "sc029 & RButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
 
 
         winwiz.drag.setholdtomove("!+LButton")
@@ -297,12 +297,13 @@ class on_main_start {
         wez.kt.enabled := true
         wez.kl.enabled := true
 
-        hotkey "sc029 & r", (*)=>(keywait("LWin", "T2"), reload())
-        hotkey "sc029 & e", (*)=>(keywait("LWin", "T2"), __k.edit_enabled_gui.bm.toggle())
+        hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
+        hotkey "sc029 & e", (*)=>(keywait("sc029", "T2"), __k.edit_enabled_gui.bm.toggle())
         hotkey "sc029 & q", (*)=>exitapp()
         hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
         hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
         hotkey "$sc029", (*)=>(send("{sc029}"))
+        hotkey "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
         if __k.enabled.bcv2_on_startup
             this.start_bcv2
     }
