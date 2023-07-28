@@ -4,6 +4,7 @@
 #Warn All, StdOut
 #SingleInstance Force
 
+#Include DEBUG\jk_debug.ahk
 #Include builtins_extended.ahk
 #Include anim.ahk
 #Include quiktip.ahk
@@ -16,7 +17,8 @@ class winwiz {
                 "class" , [
                     "Progman", "Shell_(Secondary)?TrayWnd", "SysShadow", "EdgeUiInputWndClass",
                     "Internet Explorer_Hidden", "ApplicationManager_ImmersiveShellWindow",
-                    "CEF-OSC-WIDGET", "RainmeterMeterWindow", "tooltips_class32"
+                    "CEF-OSC-WIDGET", "RainmeterMeterWindow", "tooltips_class32", 
+                    "Windows\.UI\.Core\.CoreWindow", "ApplicationFrameWindow"
                 ],
                 "processname" , [],
                 "title" , [ "^Program\sManager", "^Window\sSpy\sfor\sAHKv2" ],

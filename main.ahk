@@ -102,6 +102,10 @@ class gen {
             */
          , knto:= kitable()
            /**
+            * @prop {kitable} dskt
+            */
+         , dskt := kitable()
+           /**
             * @prop {object} anims
             */
          , anims:= {_:0
@@ -175,7 +179,6 @@ class gen {
         ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
 
         knto := this.knto
-        knto.timeout := 60 * 1000
 
         knto.hotki(",", winwiz.bm.loopwindows.bind(0,"",0,0))
         knto.hotki(".", winwiz.bm.loopwindows.bind(1,"",0,0))

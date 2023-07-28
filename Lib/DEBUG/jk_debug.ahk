@@ -282,11 +282,12 @@ dbgln(_olist*) {
     static __dbgln_desc__  := ___DBG___.cfg.desc.clone()
         ,  __dbgln__ := ___DBG___.cfg.dbgln.clone()
         ,  ____ := ___DBG___.parseopts(&__dbgln_desc__, &__dbgln__,false)["opts"]
-    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__")
+    has_uopts := false
+    if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__") {
         uopts := _olist[1]
-    else uopts := __dbgln_desc__.clone()
-    if ___DBG___.parseopts(&uopts, &__dbgln_desc__, false, true)
         _olist:=_olist.fromrange(has_uopts:=2)
+    } else uopts := __dbgln_desc__.clone()
+    ___DBG___.parseopts(&uopts, &__dbgln_desc__, false, true)
 
     uopts := (has_uopts ? uopts : __dbgln_desc__)
 
