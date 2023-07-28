@@ -9,8 +9,19 @@
 
 class sys {
     static bm := {
-        launch_env_vars : ObjBindMethod(sys.launch_env_vars, "call"),
-        launch_env_path : ObjBindMethod(sys.launch_env_vars, "edit_usr_path")
+            launch_env_vars : ObjBindMethod(sys.launch_env_vars, "call"),
+            launch_env_path : ObjBindMethod(sys.launch_env_vars, "edit_usr_path")
+        }
+        , pc := 0
+    static __new() {
+        switch A_ComputerName {
+            case "DESKTOP-HQ7DNU5":
+                this.pc := 1
+            case "DESKTOP-JJTV8BS":
+                this.pc := 2
+            case "DESKTOP-HJ4S4Q2":
+                this.pc := 3
+        }
     }
     class launch_env_vars {
         static sys_prop_adv_title := "System Properties"

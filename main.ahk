@@ -137,6 +137,7 @@ class gen {
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
         kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
         kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
+        kt.hotki("$AppsKey", "{AppsKey}")
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
         kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
@@ -233,7 +234,6 @@ class dskt extends kitable {
         this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 225, dskt.bm.toggle_forward
         this.enabled := true
     }
-    
 }
 
 class wez {
