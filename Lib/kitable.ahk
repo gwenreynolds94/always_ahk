@@ -33,8 +33,8 @@ class kitable extends map {
     __New(_timeout:=0, _oneshot:=false, _child_timeout:=2250, _hotifexpr:=false) {
         this.timeout := _timeout
         this.child_timeout := _child_timeout
-        this.oneshot := _oneshot
-        this.hotifexpr := _hotifexpr
+        this.oneshot := _oneshot or this.oneshot
+        this.hotifexpr := _hotifexpr or this.hotifexpr
         this.id := kitable.previd++
         this.bm.enable := ObjBindMethod(this, "enable")
         this.bm.disable := ObjBindMethod(this, "disable")

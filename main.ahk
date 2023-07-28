@@ -186,8 +186,13 @@ class gen {
         knto.hotki("'", wintrans.fade.bm.stepall.bind(false))
         knto.hotki("!;", wintrans.fade.bm.setall.bind(255))
 
-
         kt.hotki("AppsKey & \", this.knto.bm.toggle)
+
+        dskt := this.dskt
+        dskt.hotifexpr := ((*)=>WinActive("ahk_exe ds.exe"))
+        dskt.hotki("MButton", "{LButton Down}{RButton Down}")
+        dskt.hotki("MButton Up", "{RButton Up}{LButton Up}")
+        dskt.hotki("!w", )
 
         coordmode "tooltip", "screen"
     }
@@ -225,6 +230,7 @@ class wez {
 gen.kt.enabled := true
 gen.kl.enabled := true
 gen.ffkt.enabled := true
+gen.dskt.enabled := true
 volctrl.wheel_enabled := true
 wez.kt.enabled := true
 wez.kl.enabled := true
