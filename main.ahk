@@ -192,7 +192,6 @@ class gen {
         dskt.hotifexpr := ((*)=>WinActive("ahk_exe ds.exe"))
         dskt.hotki("MButton", "{LButton Down}{RButton Down}")
         dskt.hotki("MButton Up", "{RButton Up}{LButton Up}")
-        dskt.hotki("!w", )
 
         coordmode "tooltip", "screen"
     }
