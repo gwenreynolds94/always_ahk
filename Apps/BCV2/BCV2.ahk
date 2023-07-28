@@ -1268,7 +1268,7 @@ Class BCBApp {
 
         dimstr := ""
         dimstr .= "w" this.starting_dims.w " "
-                  "h" this.starting_dims.h " "
+                . "h" this.starting_dims.h " "
         this.edit := BCBEdit(this.gui, dimstr)
         this.edit.Font.Name := this.fontName
         this.edit.Wrap.Mode := "word"
