@@ -1247,7 +1247,7 @@ Class BCBApp {
     curIndex := 0
 
     ; @prop {Object} starting_dims
-    starting_dims := {x: "center", y: "center", w: 700, h: 400}
+    starting_dims := {x: "Center", y: "Center", w: 700, h: 400}
 
     __New() {
         this.shownIndex := this.curIndex := BCBConf.Index["Current"]
@@ -1266,7 +1266,10 @@ Class BCBApp {
                                     this.starting_dims.h -
                                     (A_ScreenWidth - this.starting_dims.w) / 2)
 
-        this.edit := BCBEdit(this.gui, "w700 h400")
+        dimstr := ""
+        for _dim in ObjOwnProps(this.starting_dims)
+            dimstr .= _dim this.starting_dims.%_dim% " "
+        this.edit := BCBEdit(this.gui, dimstr)
         this.edit.Font.Name := this.fontName
         this.edit.Wrap.Mode := "word"
         this.edit.Wrap.VisualFlags := ["start", "end"]
