@@ -8,9 +8,7 @@
 SetWorkingDir A_ScriptDir
 
 ;@Ahk2Exe-IgnoreBegin
-/**
- * @var {String} BCBIcon Path to `BCB.ico` icon
- */
+/* Path to `BCB.ico` icon */
 BCBIcon := "BCB.ico"
 ;@Ahk2Exe-IgnoreEnd
 
@@ -19,7 +17,7 @@ BCBIcon := "BCB.ico"
 BCBIcon := "HICON:" LoadPicture(A_ScriptDir "\BCV2.exe", "Icon6", &isIcon:=1)
 */
 
-A_IconTip := "BCV2"
+A_IconTip := "BetterClipboardV2"
 TraySetIcon(BCBIcon)
 
 
@@ -63,22 +61,19 @@ ParseArgs(*) {
 ; ParseArgs()
 ; BCBConf.HandleStartupArgs()
 
-; #Include ..\Lib\SciLib\SciConstants.ahk
-; #Include ..\Lib\SciLib\SciLoad.ahk
-
-#Include <SciConstants>
-#Include <SciLoad>
+#Include ..\Lib\SciLib\SciConstants.ahk
+#Include ..\Lib\SciLib\SciLoad.ahk
 
 /**
  *  @var {String} SCI_DLL_PATH Path to Scintilla.dll
  */
 SCI_DLL_PATH := "Lib\Scintilla.dll"
 if !FileExist(SCI_DLL_PATH)
-    FileInstall ".\Lib\Scintilla.dll", SCI_DLL_PATH
+    FileInstall "..\Lib\SciLib\Scintilla.dll", SCI_DLL_PATH
 
 __PC_PATH := "Lib\DetectComputer.ahk"
 if !FileExist(__PC_PATH)
-    FileInstall ".\Lib\DetectComputer.ahk", __PC_PATH
+    FileInstall "..\Lib\Utils\DetectComputer.ahk", __PC_PATH
 
 
 #Include *i Lib\DetectComputer.ahk
@@ -409,9 +404,9 @@ Class BCBEdit {
     Redo := {}
     ; @prop {Method} Duplicate Sends a SCI_SELECTIONDUPLICATE command to the control
     Duplicate := {}
-    ; @prop {Method} SelectNext Adds the next occurrence to the main selection
+    ; @prop {Method} SelectNext Adds the next occurence to the main selection
     SelectNext := {}
-    ; @prop {Method} SelectEach Adds each occurrence to the main selection
+    ; @prop {Method} SelectEach Adds each occurence to the main selection
     SelectEach := {}
     ; @prop {Method} CopyAllowLine Copies selection or current line
     CopyAllowLine := {}
@@ -1190,7 +1185,7 @@ Class BCBEdit {
     }
 }
 
-; `BCBApp` starts the **BetterClipboard** application upon the initialization
+; `BCBApp` starts the **BetterClipboard** application upon the intialization
 ; of a new instance
 Class BCBApp {
     ; @prop {Boolean} active
@@ -1246,9 +1241,6 @@ Class BCBApp {
     ; @prop {Integer} curIndex Index of most recently created clip
     curIndex := 0
 
-    ; @prop {Object} starting_dims
-    starting_dims := {x: "center", y: "center", w: 700, h: 400}
-
     __New() {
         this.shownIndex := this.curIndex := BCBConf.Index["Current"]
         this.maxIndex := BCBConf.Index["Max"]
@@ -1258,13 +1250,6 @@ Class BCBApp {
         this.gui.OnEvent("Close", "Gui_OnClose")
         this.gui.MarginX := this.gui.MarginY := 3
         this.gui.BackColor := this.colors.border
-
-        if (A_ScreenWidth < A_ScreenHeight)
-            this.starting_dims.w := 888,
-            this.starting_dims.h := 888,
-            this.starting_dims.y := (A_ScreenHeight -
-                                    this.starting_dims.h -
-                                    (A_ScreenWidth - this.starting_dims.w) / 2)
 
         this.edit := BCBEdit(this.gui, "w700 h400")
         this.edit.Font.Name := this.fontName
@@ -1297,8 +1282,7 @@ Class BCBApp {
         this.edit.Caret.Sticky := "on"
         this.edit.Caret.Width := 2
         ; this.edit.Caret.FrameDraw := True
-
-        if (A_ScreenWidth < 1900)
+        if A_ComputerName = "DESKTOP-HJ4S4Q2"
             Loop 3
                 this.edit.ZoomIn()
 
@@ -1515,7 +1499,7 @@ Class BCBApp {
     }
 
     /**
-     * Validate the existence of the directory to store clips (creating it if necessary).
+     * Validate the extistence of the directory to store clips (creating it if necessary).
      *      Will fail and exit the app if parent dir does not exist.
      *
      * If no clips exist in the directory, create one with the current clipboard contents.
