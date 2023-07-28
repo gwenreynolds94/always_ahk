@@ -40,10 +40,14 @@ Class __always_config extends conf_tool {
         super.__New(".\.ahkonf", __always_config.config_defaults)
         this.validate()
         this.edit_enabled_gui := conf_tool.section_edit(this, "Enabled", "bool")
+        this.edit_ktblgen_gui := conf_tool.section_edit(this, "ktblgen", "bool")
+        this.edit_ktblapp_gui := conf_tool.section_edit(this, "ktblapp", "bool")
     }
 
-    enabled => this.ini.enabled
     misc => this.ini.misc
+    enabled => this.ini.enabled
+    ktblgen => this.ini.ktblgen
+    ktblmisc => this.ini.ktblapp
 }
 
 __always_config.config_defaults := Map(
@@ -51,16 +55,16 @@ __always_config.config_defaults := Map(
         "fuck_cortana"    , true ,
         "bcv2_on_startup" , true ,
     ),
-    "gen_kitable", Map(
-        "leader_capslock" , true ,
+    "ktblgen", Map(
+        "leadercaps"      , true ,
         "firefox"         , true ,
         "winmode"         , true ,
         "default"         , true ,
     ),
-    "misc_kitables", Map(
+    "ktblapp", Map(
         "wezterm"         , true ,
         "death_stranding" , true ,
-    )
+    ),
     "misc", Map(
         "fuck_cortana_interval", 6666,
     )
@@ -131,6 +135,7 @@ class gen {
         anim_right_half_right:=anims.right_half_right:=[anims.misc_anim.set(anim_left_half_right*).add(a_screenwidth,0,0,0)*]
 
         kt := this.kt
+        kt.hotifexpr := (*)=>(!!__k.ktblgen.default)
 
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
         kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false, false))
@@ -145,11 +150,20 @@ class gen {
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
         kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
+        kt.hotki "sc029 & Left", "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & Down", "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & Right", "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & LButton", "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & MButton", "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"
+        kt.hotki "sc029 & RButton", "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"
+
 
         winwiz.drag.setholdtomove("!+LButton")
         winwiz.drag.setholdtosize("!+RButton")
 
         kl := this.kl
+
+        kl.hotifexpr := (*)=>(!!__k.ktblgen.leadercaps)
 
         kl.pathki(["w", "w"], anims.slide.bm.call.bind(anims.full          ))
         kl.pathki(["w", "q"], anims.slide.bm.call.bind(anims.left_full      ))
@@ -177,11 +191,12 @@ class gen {
         kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
 
         ffkt := this.ffkt
-        ffkt.hotifexpr := ((*)=>WinActive("ahk_exe firefox.exe"))
+        ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
         ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
         ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
 
         knto := this.knto
+        knto.hotifexpr := (*)=>(!!__k.ktblgen.winmode)
 
         knto.hotki(",", winwiz.bm.loopwindows.bind(0,"",0,0))
         knto.hotki(".", winwiz.bm.loopwindows.bind(1,"",0,0))
@@ -197,7 +212,7 @@ class gen {
 
 class dskt extends kitable {
 
-    hotifexpr := (*)=>(winactive("ahk_exe ds.exe"))
+    hotifexpr := (*)=>(winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
 
     /**
      * @prop {dskt} instance
@@ -251,7 +266,7 @@ class wez {
     static __new() {
 
         kt := this.kt := kitable()
-        kt.hotifexpr := (*)=>WinActive(this.wintitle)
+        kt.hotifexpr := (*)=>(WinActive(this.wintitle) and !!__k.ktblmisc.wezterm)
 
 
         kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
@@ -282,9 +297,12 @@ class on_main_start {
         wez.kt.enabled := true
         wez.kl.enabled := true
 
-        hotkey "<#sc029", (*)=>(keywait("LWin", "T2"), reload())
-        hotkey "<#<!sc029", (*)=>(keywait("LWin", "T2"), __k.edit_enabled_gui.bm.toggle())
-        hotkey "^#0", (*)=>exitapp()
+        hotkey "sc029 & r", (*)=>(keywait("LWin", "T2"), reload())
+        hotkey "sc029 & e", (*)=>(keywait("LWin", "T2"), __k.edit_enabled_gui.bm.toggle())
+        hotkey "sc029 & q", (*)=>exitapp()
+        hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
+        hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
+        hotkey "$sc029", (*)=>(send("{sc029}"))
         if __k.enabled.bcv2_on_startup
             this.start_bcv2
     }

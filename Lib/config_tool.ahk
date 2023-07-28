@@ -106,6 +106,12 @@ Class conf_tool {
         check_keys() {
             for _sectname, _sectmeat in this.defaults {
                 section_keys := []
+                has_section := false
+                loop parse, iniread(this.fpath), "`n", "`r"
+                    if _sectname = A_LoopField
+                        has_section := true
+                if not has_section
+                    iniwrite("", this.fpath, _sectname)
                 Loop Parse, IniRead(this.fpath, _sectname), "`n", "`r" {
                     RegExMatch A_LoopField, "([^=]+)=(.+)", &_re_match
                     section_keys.Push _re_match.1
