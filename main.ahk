@@ -46,17 +46,21 @@ Class __always_config extends conf_tool {
     misc => this.ini.misc
 }
 
-Class __s {
-    static __new() {
-    }
-}
-
 __always_config.config_defaults := Map(
     "enabled", Map(
-        "fuck_cortana", true,
-        "armored_core", true,
-        "fallout"     , true
+        "fuck_cortana"    , true ,
+        "bcv2_on_startup" , true ,
     ),
+    "gen_kitable", Map(
+        "leader_capslock" , true ,
+        "firefox"         , true ,
+        "winmode"         , true ,
+        "default"         , true ,
+    ),
+    "misc_kitables", Map(
+        "wezterm"         , true ,
+        "death_stranding" , true ,
+    )
     "misc", Map(
         "fuck_cortana_interval", 6666,
     )
@@ -265,15 +269,32 @@ class wez {
     }
 }
 
-gen.kt.enabled := true
-gen.kl.enabled := true
-gen.ffkt.enabled := true
-volctrl.wheel_enabled := true
-wez.kt.enabled := true
-wez.kl.enabled := true
+class on_main_start {
+    static bm := {
+            start_bcv2: objbindmethod(this, "start_bcv2")
+        }
 
-hotkey "<#sc029", (*)=>(keywait("LWin", "T2"), reload())
-hotkey "^#0", (*)=>exitapp()
+    static __new() {
+        gen.kt.enabled := true
+        gen.kl.enabled := true
+        gen.ffkt.enabled := true
+        volctrl.wheel_enabled := true
+        wez.kt.enabled := true
+        wez.kl.enabled := true
+
+        hotkey "<#sc029", (*)=>(keywait("LWin", "T2"), reload())
+        hotkey "<#<!sc029", (*)=>(keywait("LWin", "T2"), __k.edit_enabled_gui.bm.toggle())
+        hotkey "^#0", (*)=>exitapp()
+        if __k.enabled.bcv2_on_startup
+            this.start_bcv2
+    }
+
+    static start_bcv2(*) {
+        if not processexist("BCV2.exe")
+            Run(A_ScriptDir "\Apps\BCV2\BCV2.exe On")
+    }
+}
+
 
 
 ;;  class __s {

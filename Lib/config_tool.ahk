@@ -218,6 +218,12 @@ Class conf_tool {
          * @param {Object} methbound stores various instance-bound methods
          */
         methbound := {}
+        bm := {
+            show: objbindmethod(this, "show"),
+            hide: objbindmethod(this, "hide"),
+            toggle: objbindmethod(this, "toggle")
+        }
+        _hidden_ := true
 
         /**
          * @param {ConfTool} _conftool instance of ConfTool to edit
@@ -285,9 +291,21 @@ Class conf_tool {
             this._conftool.ini.%(this._section)%.%(_guictrl.Text)% := _guictrl.Value
         }
 
-        show => this._gui.Show
+        show(*) {
+            this._hidden_ := false
+            this._gui.show()
+        }
 
-        hide => this._gui.Hide
+        hide(*) {
+            this._hidden_ := true
+            this._gui.hide()
+        }
+
+        toggle(*) {
+            if this._hidden_
+                this.show()
+            else this.hide()
+        }
 
         /**
          *
