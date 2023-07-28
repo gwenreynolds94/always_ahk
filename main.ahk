@@ -190,6 +190,10 @@ class gen {
         kl.progki(["o", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe On"))
         kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
 
+        kl.fflinkki(["l", "p", "a", "y"], "paypal.com")
+        kl.fflinkki(["l", "t", "x", "t"], "textnow.com")
+        kl.fflinkki(["l", "y", "o", "u"], "youtube.com")
+
         ffkt := this.ffkt
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
         ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
@@ -261,12 +265,11 @@ class wez {
      */
    static kt := {}
         , kl := {}
-        , wintitle := "ahk_exe wezterm-gui.exe"
 
     static __new() {
 
         kt := this.kt := kitable()
-        kt.hotifexpr := (*)=>(WinActive(this.wintitle) and !!__k.ktblmisc.wezterm)
+        kt.hotifexpr := (*)=>(WinActive("ahk_exe wezterm-gui.exe") and !!__k.ktblmisc.wezterm)
 
 
         kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")

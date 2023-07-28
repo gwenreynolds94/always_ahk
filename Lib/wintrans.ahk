@@ -13,7 +13,7 @@
 
 class wintrans {
     static default_steps := [
-        75, 150, 215, 240, 255
+        75, 150, 215, 235, 245, 255
     ]
     , steps := this.default_steps
     , bm := {

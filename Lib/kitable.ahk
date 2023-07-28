@@ -15,6 +15,7 @@ class kitable extends map {
         toggle: {},
         funcwrapr: {},
         ontimeout: {},
+        fflinkki: objbindmethod(this, "linkki", unset, unset, "firefox.exe")
     },
 
     _enabled := false,
@@ -160,6 +161,11 @@ class kitable extends map {
                              _prev_relative_to
         this.pathki(_kipath, (*)=>(run(_relative_to _progpath)))
     }
+
+    linkki(_kipath, _linkaddr, _browser:="firefox.exe", *) =>
+        this.pathki(_kipath, (*)=>(run(_browser " " _linkaddr)))
+
+    fflinkki(_kipath, _linkaddr, *) => this.linkki(_kipath, _linkaddr, "firefox.exe")
 }
 
 class kileader extends kitable {
