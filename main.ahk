@@ -168,7 +168,8 @@ class gen {
         kl.progki(["o", "f", "f"], "firefox.exe")
         kl.progki(["o", "l", "s"], "Logseq.exe")
 
-        kl.progki(["o", "b", "c", "b"], A_ScriptDir "\Apps\BCV2\BCV2.exe")
+        kl.progki(["o", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe On"))
+        kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
 
         ffkt := this.ffkt
         ffkt.hotifexpr := ((*)=>WinActive("ahk_exe firefox.exe"))
