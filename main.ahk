@@ -102,10 +102,6 @@ class gen {
             */
          , knto:= kitable()
            /**
-            * @prop {kitable} dskt
-            */
-         , dskt := kitable()
-           /**
             * @prop {object} anims
             */
          , anims:= {_:0
@@ -170,6 +166,7 @@ class gen {
 
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
+        kl.progki(["o", "l", "s"], "Logseq.exe")
 
         kl.progki(["o", "b", "c", "b"], A_ScriptDir "\Apps\BCV2\BCV2.exe")
 
@@ -188,13 +185,54 @@ class gen {
 
         kt.hotki("AppsKey & \", this.knto.bm.toggle)
 
-        dskt := this.dskt
-        dskt.hotifexpr := ((*)=>WinActive("ahk_exe ds.exe"))
-        dskt.hotki("MButton", "{LButton Down}{RButton Down}")
-        dskt.hotki("MButton Up", "{RButton Up}{LButton Up}")
-
         coordmode "tooltip", "screen"
     }
+}
+
+class dskt extends kitable {
+
+    hotifexpr := (*)=>(winactive("ahk_exe ds.exe"))
+
+    /**
+     * @prop {dskt} instance
+     */
+    static bm := {
+            toggle_forward : objbindmethod(this, "toggle_forward")
+        }
+        , _moving_forward := false
+        , _holding_left := false
+        , _holding_right := false
+        , instance := this()
+
+    static toggle_forward(*) {
+        if (this._moving_forward:=!this._moving_forward)
+            send "{w Down}"
+        else send("{w Up}")
+    }
+
+    static toggle_leftrighthold(*) {
+        if not (this._holding_left and this._holding_right) {
+            this._holding_left := this._holding_right := true
+        }
+        else {
+            this._holding_left := this._holding_right := false
+            ; ...
+        }
+    }
+
+    __new() {
+        super.__new()
+        this.hotki "MButton", "{LButton Down}{RButton Down}"
+        this.hotki "MButton Up", "{RButton Up}{LButton Up}"
+        this.hotki "!q", dskt.bm.toggle_forward
+        this.hotki "$w", ((*)=>(send("{w Down}")))
+        this.hotki "$w Up", ((*)=>(send("{w Up}"), dskt._moving_forward:=false))
+        this.hotki "XButton1", "{w}"
+        this.hotki "XButton1 Up", "{w Up}"
+        this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 225, dskt.bm.toggle_forward
+        this.enabled := true
+    }
+    
 }
 
 class wez {
@@ -229,7 +267,6 @@ class wez {
 gen.kt.enabled := true
 gen.kl.enabled := true
 gen.ffkt.enabled := true
-gen.dskt.enabled := true
 volctrl.wheel_enabled := true
 wez.kt.enabled := true
 wez.kl.enabled := true
