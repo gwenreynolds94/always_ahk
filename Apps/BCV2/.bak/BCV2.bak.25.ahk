@@ -1267,8 +1267,8 @@ Class BCBApp {
                                     (A_ScreenWidth - this.starting_dims.w) / 2)
 
         dimstr := ""
-        dimstr .= "w" this.starting_dims.w " "
-                  "h" this.starting_dims.h " "
+        for _dim in ObjOwnProps(this.starting_dims)
+            dimstr .= _dim this.starting_dims.%_dim% " "
         this.edit := BCBEdit(this.gui, dimstr)
         this.edit.Font.Name := this.fontName
         this.edit.Wrap.Mode := "word"
@@ -1305,9 +1305,9 @@ Class BCBApp {
             Loop 3
                 this.edit.ZoomIn()
 
-        this.gui.Show("NA x" (A_ScreenWidth*(-1000) - 5))
+        this.gui.Show("NA x" A_ScreenWidth)
         WinSetTransparent(0, this.gui)
-        this.gui.Show("Hide x" this.starting_dims.x " y" this.starting_dims.y)
+        this.gui.Show("Hide Center")
 
         this.idxGui := BCBIndexGui(this.gui, this.colors)
 
