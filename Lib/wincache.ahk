@@ -9,16 +9,20 @@
 
 class wincache {
     static _item_cache_ := Map()
+        ,  _dead_item_cache_ := Map()
+        ,  _last_cleanup_ := 0
+        ,  _cleanup_interval_ := 5
 
     static __item[_win_title, _winwrapr_prop?] {
 
         get {
+            wincache.incrlastcleanup
             _win_title := (_win_title = "A") ? winexist("A") : _win_title
             if _win_title and (_win_title is number) {
-                if this._item_cache_.has(_win_title) and this._item_cache_[_win_title].exists
-                    return this._item_cache_[_win_title]
+                if wincache._item_cache_.has(_win_title) and wincache._item_cache_[_win_title].exists
+                    return wincache._item_cache_[_win_title]
                 else if (newwin:=winwrapper(_win_title)).exists
-                    return (this._item_cache_[_win_title]:=newwin)
+                    return (wincache._item_cache_[_win_title]:=newwin)
                 else return false
             }
             wlist := !!_win_title ? winwiz.winlist[_win_title] : winwiz.winlist
@@ -43,6 +47,7 @@ class wincache {
     static __enum(_varcount:=5) {
         ___enum(_vcnt, &_v1?, &_v2?, &_v3?, &_v4?, &_v5?) {
             static _cache_ := 0, _prev_ := 0
+            wincache.incrlastcleanup
             if not _cache_
                 for _h in (_cache_:=[], winwiz.winlist)
                     _cache_.push(( wincache._item_cache_.has(_h) ?
@@ -78,6 +83,19 @@ class wincache {
             return true
         }
         return ___enum.bind(_varcount)
+    }
+
+    static incrlastcleanup(*) {
+        if wincache._last_cleanup_++ >= wincache._cleanup_interval_
+            wincache.cleanupbodies
+    }
+
+    static cleanupbodies(*) {
+        for _hwnd, _win in wincache._item_cache_
+            if not _win.exists
+                wincache._dead_item_cache_[_hwnd] := _win,
+                wincache._item_cache_.delete(_hwnd)
+        wincache._last_cleanup_ := 0
     }
 }
 

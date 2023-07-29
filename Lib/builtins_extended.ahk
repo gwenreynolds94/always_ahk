@@ -190,8 +190,8 @@ Class __Array extends Array {
 
     ForEach(_func, *) {
         _parsed_list := []
-        for _index, _value in this
-            _parsed_list.Push _func(_value, _index, this)
+        for _value in this
+            _parsed_list.Push _func(_value, A_Index, this)
         return _parsed_list
     }
     Min(_values*) => Min(this.extend(_values)*)
@@ -281,6 +281,31 @@ Class __Map extends Map {
                 newmap[_key] := _value
         return newmap
     }
+
+    ForEach(_func) {
+        parsedarray := []
+        for _k, _v in this
+            parsedarray.push _func(_k, _v, A_index, this)
+        return parsedarray
+    }
+
+    Where(_func) {
+        parsedmap := Map()
+        for _k, _v in this
+            if _func(_k, _v, A_Index, this)
+                parsedmap[_k] := _v
+        return parsedmap
+    }
+
+    WhereSplit(_func) {
+        parsedmap := Map()
+        for _k, _v in this
+            parsedmap[!!_func(_k, _v, A_Index, this)][_k] := _v
+        return parsedmap
+    }
+
+    Keys(*)=>this.ForEach((_k, *)=>(_k))
+    Values(*)=>this.ForEach((_, _v, *)=>(_v))
 
 }
 

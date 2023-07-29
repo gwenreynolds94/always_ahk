@@ -140,16 +140,18 @@ class gen {
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
         kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false, false))
         kt.hotki("XButton2 & MButton", ((*)=>(winactivate(twin:=winwiz.winfromzoffset[4]))))
-        kt.hotki("$XButton2", "{XButton2}")
-        kt.dblki("$XButton1", (*)=>(send("{Ctrl Down}c{Ctrl Up}")), 200, ((*)=>send("{XButton1}")))
+        kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 234, "{XButton2}")
+        kt.dblki("$XButton1", "{Ctrl Down}c{Ctrl Up}", 234, "{XButton1}")
         kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
         kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
         kt.hotki("AppsKey & RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
         kt.hotki("$AppsKey", "{AppsKey}")
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
-        kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
-        kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
+        kt.hotki("<#f", wintrans.fade.bm.stepactive.bind(true))
+        kt.hotki("<!<#f", wintrans.fade.bm.stepactive.bind(false))
+        kt.hotki "<^<#f", wintrans.tgui.inst.bmtoggle
+        kt.hotki "~<+<#f", wintrans.bm.removeactivestep
 ;; ; ;; ; When MWB hooks into the keyboard/mouse, hotkeys don't work on other computers, 
 ;; ; ;; ; ;; ; so no hooking hotkeys set in MWB (CTRL+ALT+[F1,F2,F3,F4], etc.)
 ;; ;        kt.hotki "sc029 & Left", (*)=>(keywait("sc029"), send("{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
@@ -188,6 +190,7 @@ class gen {
         kl.progki(["o", "w", "e"], "wezterm-gui.exe")
         kl.progki(["o", "f", "f"], "firefox.exe")
         kl.progki(["o", "l", "s"], "Logseq.exe")
+        kl.progki(["o", "i", "t"], "iTunes.exe")
 
         kl.progki(["o", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe On"))
         kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
@@ -200,6 +203,7 @@ class gen {
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
         ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
         ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
+        ffkt.hotki("$F1", "{F1}")
 
         knto := this.knto
         knto.hotifexpr := (*)=>(!!__k.ktblgen.winmode)

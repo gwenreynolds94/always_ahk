@@ -67,7 +67,7 @@ class ___DBG___ {
 
     static opendebugview(*) {
         static _exe_path := "C:\Users\" A_UserName "\Portables\sysinternals\DebugView\dbgview64.exe"
-        if not winexist("ahk_exe dbgview64.exe") {
+        if not winexist("ahk_class dbgviewClass.exe") {
             run _exe_path,,, &_dbgview_pid:=0
             winwait "ahk_pid " _dbgview_pid
             winactivate "ahk_pid " _dbgview_pid
