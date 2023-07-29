@@ -150,12 +150,14 @@ class gen {
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("#f", wintrans.fade.bm.stepactive.bind(true))
         kt.hotki("#!f", wintrans.fade.bm.stepactive.bind(false))
-        kt.hotki "sc029 & Left", (*)=>(keywait("sc029"), send("{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
-        kt.hotki "sc029 & Down", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
-        kt.hotki "sc029 & Right", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
-        kt.hotki "sc029 & LButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
-        kt.hotki "sc029 & MButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
-        kt.hotki "sc029 & RButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
+;; ; ;; ; When MWB hooks into the keyboard/mouse, hotkeys don't work on other computers, 
+;; ; ;; ; ;; ; so no hooking hotkeys set in MWB (CTRL+ALT+[F1,F2,F3,F4], etc.)
+;; ;        kt.hotki "sc029 & Left", (*)=>(keywait("sc029"), send("{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
+;; ;        kt.hotki "sc029 & Down", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
+;; ;        kt.hotki "sc029 & Right", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
+;; ;        kt.hotki "sc029 & LButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
+;; ;        kt.hotki "sc029 & MButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
+;; ;        kt.hotki "sc029 & RButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
 
 
         winwiz.drag.setholdtomove("!+LButton")
