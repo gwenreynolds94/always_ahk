@@ -9,33 +9,65 @@
 class anim {
         duration := 5000
       , fps      := 100
+      , speed    := 30
+      , accel    := 1
       , bm       := { loop : false
                     , call : false
                     , foreachloop: false
                     , afterloop : false }
       , progress := 0
       , tickstart := 0
+      , tickdelta := 0
+      , tickprev := 0
+      , ticknow := 0
+      , tickavgdelta := 0
+      , startloopdelay := 10
     __new() {
       this.bm := { loop : objbindmethod(this, "loop")
                  , call : objbindmethod(this, "call")
                  , afterloop : objbindmethod(this, "afterloop")
                  , foreachloop: objbindmethod(this, "foreachloop") }
     }
-    loop(*) {
-        if !(this.foreachloop(&_progress:=this.progress, this.tickstart, this.duration))
-            return (settimer(this.bm.loop, 0), this.afterloop(), false)
-        return (this.progress := _progress)
+    startloop(*) {
+        this.tickstart := this.tickprev := A_TickCount
+        this.tickavgdelta := this.startloopdelay.abs()
+        this.loopnext()
     }
-    foreachloop(&_progress, _tickstart, _duration, *) {
-        _progress := ((A_TickCount - _tickstart) / _duration).clamp()
-        return (_progress < 1)
+    stoploop(*) {
+        settimer this.bm.loop, 0
+        this.afterloop()
+    }
+    loopnext(*) {
+        loopdelay := integer(1000 / this.fps)
+        loopcount := this.duration / loopdelay
+        durprog := this.ticknow - this.tickstart
+        lastloop := (durprog - durprog.mod(loopdelay)) / loopdelay
+        nextloop := (lastloop + 1) * loopdelay
+        loopdelay := (nextloop + this.tickstart) - this.ticknow
+        settimer this.bm.loop, loopdelay.neg()
+    }
+    loop(*) {
+        this.ticknow := A_TickCount
+        this.tickdelta := this.ticknow - this.tickprev
+        this.tickavgdelta += this.tickdelta, this.tickavgdelta /= 2
+        this.progress := this.foreachloop()
+        if not this.progress
+            this.stoploop()
+        else this.loopnext()
+        this.tickprev := this.ticknow
+        return this.progress
+    }
+    foreachloop(*) {
+        this.progress := ((this.ticknow - this.tickstart) / this.duration).clamp()
+        return ( this.progress < 1 ) ? this.progress : false
     }
     afterloop(*) {
         this.progress := 0
     }
     call(*) {
         this.tickstart := A_TickCount
-        settimer(this.bm.loop, (1000 // this.fps).abs())
+        if !this.progress
+            this.startloop
     }
     class win extends anim {
         _hwnd := "A",

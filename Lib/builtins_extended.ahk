@@ -52,6 +52,7 @@ Class __Number extends Number {
     Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
     Min(_values*) => Min(this, _values*)
     Max(_values*) => Max(this, _values*)
+    Mod(_divisor) => Mod(this, _divisor)
 }
 
 Class __String extends String {

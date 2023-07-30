@@ -52,7 +52,7 @@ class wintrans {
 
     static step(_hwnd, _reverse:=false) {
         target_win := wincache[_hwnd]
-        new_trans_index := 
+        new_trans_index :=
             this.steps.IndexOf((target_win.transparency).nearest(this.steps*)) + (_reverse ? (-1) : 1)
         if new_trans_index > this.steps.length
             new_trans_index := 1
@@ -82,7 +82,7 @@ class wintrans {
 
     class tgui extends gui {
 
-        /** 
+        /**
          * @prop {Gui.Edit} editctrl
          */
         editctrl := {}
@@ -111,6 +111,7 @@ class wintrans {
         , bmtoggle      := {}
         , bmcancel      := {}
         , bmhotif       := {}
+        , bmchincr      := {}
         , bmincrall     := {}
         , bmdecrall     := {}
         , bmtranspreview := {}
@@ -122,6 +123,8 @@ class wintrans {
         , prevpreviewtrans := 255
         , prevactivewin := 0x00000
         , previewmode := "one"
+        , lastpreview := 0
+        , lastpreviewall := 0
         __new() {
             tgui := wintrans.tgui
             ecfg := tgui.editcfg
@@ -132,17 +135,19 @@ class wintrans {
             this.MarginX := tcfg.mgn.x
             this.MarginY := tcfg.mgn.y
             this.BackColor := ecfg.bg
-            this.editctrl := this.Add(
-                    "Edit",
-                    ecfg.opts " Background" ecfg.bg " x" ecfg.size.x " y" ecfg.size.y .
-                                                    " w" ecfg.size.w " h" ecfg.size.h ,
-                    ecfg.placeholder)
+            this.editctrl := this.Add( "Edit", ecfg.opts
+                               . " Background" ecfg.bg
+                                        . " x" ecfg.size.x
+                                        . " y" ecfg.size.y
+                                        . " w" ecfg.size.w
+                                        . " h" ecfg.size.h
+                                             , ecfg.placeholder )
             this.updownctrl := this.Add( "UpDown", "Wrap Range0-255", 155)
             this.updownctrl.Visible := false
-            this.editctrl.SetFont( "c" ecfg.font.color " s" ecfg.font.pt " w" ecfg.font.wt, 
+            this.editctrl.SetFont( "c" ecfg.font.color " s" ecfg.font.pt " w" ecfg.font.wt,
                                                                               ecfg.font.name )
-            this.bmtranspreview := objbindmethod(this, "transpreview", this.updownctrl)
-            this.bmtranspreviewall := objbindmethod(this, "transpreviewall", this.updownctrl)
+            this.bmtranspreview := objbindmethod(this, "transpreview")
+            this.bmtranspreviewall := objbindmethod(this, "transpreviewall")
             this.bmsubmittrans := objbindmethod(this, "submittrans")
             this.bmsubmittransone := objbindmethod(this, "submittransone")
             this.bmsubmittransall := objbindmethod(this, "submittransall")
@@ -151,10 +156,11 @@ class wintrans {
             this.bmtoggle := objbindmethod(this, "toggle")
             this.bmcancel := objbindmethod(this, "cancel")
             this.bmhotif := objbindmethod(this, "hotif")
-            this.bmincr := objbindmethod(this, "incr")
-            this.bmdecr := objbindmethod(this, "decr")
-            this.bmincrall := objbindmethod(this, "incrall")
-            this.bmdecrall := objbindmethod(this, "decrall")
+            this.bmchincr := objbindmethod(this, "chincr")
+            this.bmincr := objbindmethod(this, "chincr", 1, false)
+            this.bmdecr := objbindmethod(this, "chincr", -1, false)
+            this.bmincrall := objbindmethod(this, "chincr", 1, true)
+            this.bmdecrall := objbindmethod(this, "chincr", -1, true)
             hotif this.bmhotif
             hotkey "Enter"              , this.bmsubmittrans, "On"
             hotkey "XButton1 & LButton" , this.bmsubmittrans, "On"
@@ -177,49 +183,43 @@ class wintrans {
 
         hotif(*)=>(!this.hidden)
 
-        decr(*) {
-
-            this.updownctrl.value -= this.updownincrement
-            (this.bmtranspreview.bind(-this.updownincrement))()
-        }
-        incr(*) {
-            this.updownctrl.value += this.updownincrement
-            (this.bmtranspreview.bind(this.updownincrement))()
-        }
-
-        decrall(*) {
-            this.updownctrl.value -= this.updownincrement
-            (this.bmtranspreviewall.bind(-this.updownincrement))()
-        }
-        incrall(*) {
-            this.updownctrl.value += this.updownincrement
-            (this.bmtranspreviewall.bind(this.updownincrement))()
+        chincr(_incrmod:=1, _all:=false, *) {
+            _incr := (_incrmod * this.updownincrement)
+            if !!_all
+                this.transpreviewall(_incr)
+            else this.transpreview(_incr)
         }
 
         activewin => winwiz.mousewintitle
 
-        transpreview(_guictrl, _incrval?, *) {
-            newtrans := _guictrl.Value
+        transpreview(_incr?, *) {
+            nowtick := A_TickCount
+            deltatick := nowtick - this.lastpreview
+            curtrans := this.updownctrl.Value
+            newtrans := curtrans + (_incr ?? 0)
             awin := this.activewin
-            deltatrans := (this.prevpreviewtrans - newtrans).Abs()
-            deltacap := (this.updownincrement * this.deltacapmod)
             if awin != this.prevactivewin
-                _guictrl.Value := (wincache[awin]).transparency,
-                _guictrl.Value += (_incrval ?? 0),
-                newtrans := _guictrl.Value
+                this.updownctrl.Value := (wincache[awin]).transparency,
+                this.updownctrl.Value += (_incrval ?? 0),
+                newtrans := this.updownctrl.Value
+            this.updownctrl.value := newtrans
             wintrans.fade.set(awin, newtrans)
             this.previewmode := "one"
             this.prevpreviewtrans := newtrans
             this.prevactivewin := awin
+            this.lastpreview := nowtick
         }
 
-        transpreviewall(_guictrl, _incrdir?, *) {
-            newtrans := _guictrl.Value
-            deltatrans := (this.prevpreviewtrans - newtrans).Abs()
-            deltacap := (this.updownincrement * this.deltacapmod)
+        transpreviewall(_incr?, *) {
+            nowtick := A_TickCount
+            deltatick := nowtick - this.lastpreviewall
+            curtrans := this.updownctrl.Value
+            newtrans := curtrans + (_incr ?? 0)
+            this.updownctrl.Value := newtrans
             wintrans.fade.setall(newtrans)
             this.previewmode := "all"
             this.prevpreviewtrans := newtrans
+            this.lastpreviewall := nowtick
         }
 
         show(*) {
@@ -240,7 +240,7 @@ class wintrans {
             if this.hidden
                 return
             this.hide()
-            this.translvlsonopen.foreach (_hwnd, _trans, *)=> 
+            this.translvlsonopen.foreach (_hwnd, _trans, *)=>
                                          (wintrans.fade.set(_hwnd, _trans))
             this.translvlsonopen.clear
         }
@@ -277,7 +277,7 @@ class wintrans {
             wintrans.fade.setall(newtrans)
         }
 
-        static cfg := { 
+        static cfg := {
                     size : vector4.rect((A_ScreenWidth / 2) - 180, 120, 360, 160)
                   , mgn  : vector2(0, 0)
                   , opts : "-Caption +ToolWindow"
@@ -355,17 +355,19 @@ class wintrans {
                 this.step(hwnd_, _reverse)
         }
 
-        duration := 100,
-        fps      := 120,
+        duration := 60,
+        fps      := 200,
         wintitle := "A",
         hwnd     := 0x0,
         win      := { },
         source_trans  := 000,
         current_trans := 000,
-        target_trans  := 255
+        target_trans  := 255,
+        call_history := Map()
 
         loop(*) {
-            if super.loop()
+            super.loop()
+            if this.progress
                 this.win.transparency := this.current_trans
         }
 
@@ -375,12 +377,13 @@ class wintrans {
             quiktool integer(wintrans.steps.IndexOf(this.target_trans)) . "." . this.target_trans
         }
 
-        foreachloop(&_progress, _tickstart, _duration, *) {
-            if not super.foreachloop(&_progress, _tickstart, _duration)
-                return (false)
-            this.current_trans := (this.source_trans).lerp(this.target_trans, cos(2 * Math.PI) * _progress)
-            quiktool "-." integer(this.current_trans)
-            return _progress
+        foreachloop(*) {
+            this.progress:=super.foreachloop()
+            if this.progress {
+                this.current_trans := (this.source_trans).lerp(this.target_trans, cos(2 * Math.PI) * this.progress)
+                quiktool "-." integer(this.current_trans)
+            }
+            return this.progress
         }
 
         call(_this, _target_trans, *) {

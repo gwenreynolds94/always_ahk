@@ -11,7 +11,7 @@ class wincache {
     static _item_cache_ := Map()
         ,  _dead_item_cache_ := Map()
         ,  _last_cleanup_ := 0
-        ,  _cleanup_interval_ := 5
+        ,  _cleanup_interval_ := 3
 
     static __item[_win_title, _winwrapr_prop?] {
 
