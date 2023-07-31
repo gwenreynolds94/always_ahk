@@ -40,6 +40,15 @@ Class __Number extends Number {
         return this
     }
 
+    Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
+    Min(_values*) => Min(this, _values*)
+    Max(_values*) => Max(this, _values*)
+    Mod(_divisor) => Mod(this, _divisor)
+    Round(_N:=0) => Round(this, _N)
+
+    WinExists(_win_text?, _exclude_title?, _exclude_text?, *) => WinExist(
+                        this, _win_text?, _exclude_title?, _exclude_text?)
+
     Nearest(_numbers*) {
         closest_number := _numbers.length ? _numbers[1] : Number(this)
         for _nbr in _numbers {
@@ -48,11 +57,6 @@ Class __Number extends Number {
         }
         return closest_number
     }
-
-    Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
-    Min(_values*) => Min(this, _values*)
-    Max(_values*) => Max(this, _values*)
-    Mod(_divisor) => Mod(this, _divisor)
 }
 
 Class __String extends String {
@@ -64,6 +68,9 @@ Class __String extends String {
         for _prop in ObjOwnProps(this.Prototype)
             String.Prototype.%_prop% := this.Prototype.%_prop%
     }
+
+    WinExists(_win_text?, _exclude_title?, _exclude_text?, *) => WinExist(
+                        this, _win_text?, _exclude_title?, _exclude_text?)
 
     Length() {
         Return StrLen(this)

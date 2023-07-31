@@ -103,14 +103,13 @@ class winwiz {
     class wiggle extends anim.win {
           cycles := 10
         , amplitude := 32
-
-        foreachloop(&_progress, _tickstart, _duration) {
-            if not super.foreachloop(&_progress, _tickstart, _duration)
+        foreachloop() {
+            if not super.foreachloop()
                 return (false)
-            this.modrect.x := sin(2 * Math.PI * this.cycles * _progress) * this.amplitude
-            this.modrect.y := cos(2 * Math.PI * this.cycles * _progress) * this.amplitude * 0.75
-            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.wrect, cos(2 * Math.PI * _progress))
-            return _progress
+            this.modrect.x := sin(2 * Math.PI * this.cycles * this.progress) * this.amplitude
+            this.modrect.y := cos(2 * Math.PI * this.cycles * this.progress) * this.amplitude * 0.75
+            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.wrect, cos(2 * Math.PI * this.progress))
+            return this.progress
         }
     }
 
@@ -118,25 +117,25 @@ class winwiz {
         targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
         amplitude := 64,
         cycles := 5
-
-        foreachloop(&_progress, _tickstart, _duration) {
-            if not super.foreachloop(&_progress, _tickstart, _duration)
+        foreachloop(*) {
+            if not super.foreachloop()
                 return (this.wrect.set(this.targrect), false)
-            this.modrect.y := cos(2 * Math.PI * _progress * this.cycles) * this.amplitude * 0.75
-            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.targrect, cos(2 * Math.PI) * _progress)
-            return _progress
+            this.modrect.y := cos(2 * Math.PI * this.progress * this.cycles) * this.amplitude * 0.75
+            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.targrect, cos(2 * Math.PI) * this.progress)
+            return this.progress
         }
     }
 
     class slide extends anim.win {
         targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
         duration := 333
-        foreachloop(&_progress, _tickstart, _duration) {
-            if not super.foreachloop(&_progress, _tickstart, _duration)
-                return (this.wrect.set(this.targrect), false)
-            this.modrect.set(this.targrect).sub(this.wrect).mul(sin(0.5 * Math.PI * _progress)).add(this.wrect)
-            this.rtnrect.set(this.wrect).lerp(this.modrect, sin(0.5 * Math.PI * _progress))
-            return _progress
+        fps := 120
+        foreachloop(*) {
+            if not super.foreachloop()
+                return false
+            this.modrect.set(this.targrect).sub(this.wrect).mul(sin(0.5 * Math.PI * this.progress)).add(this.wrect)
+            this.rtnrect.set(this.wrect).lerp(this.modrect, sin(0.5 * Math.PI * this.progress))
+            return this.progress
         }
     }
 

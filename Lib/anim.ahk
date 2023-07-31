@@ -7,21 +7,25 @@
 #Include builtins_extended.ahk
 
 class anim {
-        duration := 5000
-      , fps      := 100
+        progress := 0
+      , duration := 5000
+      , fps      := 60
       , speed    := 30
       , accel    := 1
       , bm       := { loop : false
                     , call : false
                     , foreachloop: false
                     , afterloop : false }
-      , progress := 0
-      , tickstart := 0
+      , tickinterval := 0
+      , tickavgdelta := 0
+      , tickcount := 0
       , tickdelta := 0
+      , tickstart := 0
       , tickprev := 0
       , ticknow := 0
-      , tickavgdelta := 0
-      , startloopdelay := 10
+      , loopdur := 0
+      , loopindex := 0
+      , loopdelay := 0
     __new() {
       this.bm := { loop : objbindmethod(this, "loop")
                  , call : objbindmethod(this, "call")
@@ -29,16 +33,21 @@ class anim {
                  , foreachloop: objbindmethod(this, "foreachloop") }
     }
     startloop(*) {
-        this.tickstart := this.tickprev := A_TickCount
-        this.tickavgdelta := this.startloopdelay.abs()
-        this.loopnext()
+        this.tickstart := A_TickCount
+        this.tickinterval := ( 1000 / this.fps )
+        this.tickcount := this.duration / this.tickinterval
+        settimer this.bm.loop, this.tickinterval.abs()
     }
     stoploop(*) {
         settimer this.bm.loop, 0
         this.afterloop()
     }
+    afterloop(*) {
+        this.progress := 0
+    }
     loopnext(*) {
-        loopdelay := integer(1000 / this.fps)
+        (++this.loopindex)
+        return settimer(this.bm.loop, this.tickinterval)
         loopcount := this.duration / loopdelay
         durprog := this.ticknow - this.tickstart
         lastloop := (durprog - durprog.mod(loopdelay)) / loopdelay
@@ -47,22 +56,19 @@ class anim {
         settimer this.bm.loop, loopdelay.neg()
     }
     loop(*) {
+        this.tickprev := this.ticknow
         this.ticknow := A_TickCount
         this.tickdelta := this.ticknow - this.tickprev
         this.tickavgdelta += this.tickdelta, this.tickavgdelta /= 2
         this.progress := this.foreachloop()
         if not this.progress
             this.stoploop()
-        else this.loopnext()
-        this.tickprev := this.ticknow
+        ; else this.loopnext()
         return this.progress
     }
     foreachloop(*) {
         this.progress := ((this.ticknow - this.tickstart) / this.duration).clamp()
         return ( this.progress < 1 ) ? this.progress : false
-    }
-    afterloop(*) {
-        this.progress := 0
     }
     call(*) {
         this.tickstart := A_TickCount
@@ -70,14 +76,15 @@ class anim {
             this.startloop
     }
     class win extends anim {
-        _hwnd := "A",
+        wintitle := "A",
         hwnd := 0x0,
+        winwrapr := winwrapper()
         setwinpos := false,
         wrect := vector4.rect(), targrect := vector4.rect()
         modrect := vector4.rect(), rtnrect := vector4.rect()
 
-        __new(_hwnd?) {
-            this._hwnd := _hwnd ?? "A"
+        __new(wintitle?) {
+            this.wintitle := wintitle ?? "A"
             this.setwinpos := winwiz.dll.setwindowpos.bm.sansextframebounds
             super.__new()
         }
@@ -89,11 +96,11 @@ class anim {
 
         afterloop(*) {
             super.afterloop()
-            this.setwinpos(this.wrect*)
+            this.setwinpos(this.targrect*)
         }
 
         call(_targrect:=false, *) {
-            this.hwnd := winexist(this._hwnd)
+            this.hwnd := winexist(this.wintitle)
             if not this.hwnd
                 return false
             this.targrect := ((_targrect is vector4) ? _targrect :

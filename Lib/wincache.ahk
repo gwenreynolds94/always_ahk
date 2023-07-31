@@ -111,9 +111,12 @@ class winwrapper {
     hwnd      := 0x0
 
     __new(_window_title:="") {
-        this.hwnd := winexist(_window_title)
-        if !this.hwnd
+        if not _window_title or !(this.hwnd:=_window_title.winexists())
             return
+        this._update_attr_
+    }
+
+    _update_attr_(*) {
         (this.exe), (this.class), (this.rect), (this.title), (this.transparency)
         (this.frameboundsmargincorners), (this.frameboundsmarginrect)
     }
@@ -122,7 +125,6 @@ class winwrapper {
     title => (this.hwnd and this._title) or (this._title:=wingettitle(this.hwnd))
     exe => (this.hwnd and this._exe) or (this._exe:=wingetprocessname(this.hwnd))
     class => (this.hwnd and this._class) or (this._class:=wingetclass(this.hwnd))
-
     ancestor[_GA_ANCESTOR:="PARENT"] {
         get {
             static GA_PARENT:=1, GA_ROOT:=2, GA_ROOTOWNER:=3
@@ -141,12 +143,10 @@ class winwrapper {
         get => ((_return_previous and this._frameboundsmargin) or (this._frameboundsmargin :=
             winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd) ))
     }
-
     alwaysontop {
         get => this._alwaysontop
         set => WinSetAlwaysOnTop(this._alwaysontop:=value, this.hwnd)
     }
-
     transparency[_return_previous:=false] {
         get => ((_return_previous and this._transparency) or (this._transparency :=
             (wingettransparent(this.hwnd) or 255)))
