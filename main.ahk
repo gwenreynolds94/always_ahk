@@ -100,7 +100,7 @@ class gen {
            /**
             * @prop {kileader} kl
             */
-         , kl:= kileader(sys.pc = 1 ? "sc03A" : "vk14")
+         , kl:= kileader("sc03A")
            /**
             * @prop {kitable} ffkt
             */
@@ -286,7 +286,7 @@ class wez {
         ; kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, true, false))
         kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
         kt.hotki("AppsKey", "{F13}")
-        kt.hotki(sys.pc = 1 ? "!sc03A" : "!vk14", "{F13}")
+        kt.hotki("!sc03A", "{F13}")
 
 ;        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
 ;        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false, false))
@@ -312,6 +312,8 @@ class on_main_start {
         hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
         hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
         hotkey "$sc029", (*)=>(send("{sc029}"))
+        hotkey "$sc03A", (*)=>(send("{sc03A}"))
+        hotkey "$!sc03A", (*)=>(send("{Alt Down}{sc03A}{Alt Up}"))
         hotkey "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
         if __k.enabled.bcv2_on_startup
             this.start_bcv2
