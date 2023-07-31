@@ -18,9 +18,10 @@ class winwiz {
                     "Progman", "Shell_(Secondary)?TrayWnd", "SysShadow", "EdgeUiInputWndClass",
                     "Internet Explorer_Hidden", "ApplicationManager_ImmersiveShellWindow",
                     "CEF-OSC-WIDGET", "RainmeterMeterWindow", "tooltips_class32", 
-                    "Windows\.UI\.Core\.CoreWindow", "ApplicationFrameWindow"
+                    "Windows\.UI\.Core\.CoreWindow", "ApplicationFrameWindow", 
+                    "MozillaDropShadowWindowClass"
                 ],
-                "processname" , [],
+                "processname" , ["PowerToys.MouseWithoutBordersHelper.exe"],
                 "title" , [ "^Program\sManager", "^Window\sSpy\sfor\sAHKv2" ],
             )
          , whitelists := Map(
@@ -32,7 +33,8 @@ class winwiz {
                 loopwindows:  {},
                 cyclewindows: {},
                 searchv2docs: {},
-                winkillclass: {}
+                winkillclass: {},
+                filterwintitle: {},
             }
 
     static __new() {
@@ -40,6 +42,7 @@ class winwiz {
         this.bm.cyclewindows := objbindmethod(this, "cyclewindows")
         this.bm.searchv2docs := objbindmethod(this, "searchv2docs")
         this.bm.winkillclass := objbindmethod(this, "winkillclass")
+        this.bm.filterwintitle := objbindmethod(this, "filterwintitle")
     }
 
     static _debug_wintitles(_wlist*) {
@@ -55,19 +58,31 @@ class winwiz {
      * @param {string} [_return_type="hwnd"] `hwnd` | `class` | `title` | `process` | `processpath`
      * @prop {number|string} win_under_mouse
      */
-    static mousewintitle[_return_type:="hwnd"] {
+    static mousewintitle[_return_type:="hwnd", _filter:=false] {
         get {
             MouseGetPos(,, &_hwnd)
-            return (not winexist(_hwnd))          ? false               :
-                   (_return_type = "hwnd")        ? _hwnd               :
-                   (_return_type = "class")       ? WinGetClass()       :
-                   (_return_type = "title")       ? WinGetTitle()       :
-                   (_return_type = "processpath") ? WinGetProcessPath() :
-                   (_return_type = "processname") ? WinGetProcessName() : _hwnd
+            return (!!_filter and !this.filterwintitle(_hwnd)) ? false    :
+                   (!_filter and !winexist(_hwnd))  ? false               :
+                   (_return_type = "hwnd")          ? _hwnd               :
+                   (_return_type = "class")         ? WinGetClass()       :
+                   (_return_type = "title")         ? WinGetTitle()       :
+                   (_return_type = "processpath")   ? WinGetProcessPath() :
+                   (_return_type = "processname")   ? WinGetProcessName() : _hwnd
         }
     }
 
     static mousewin => wincache[winwiz.mousewintitle]
+
+    static filterwintitle(_f_wintitle, *) {
+        for _listgroup in [[this.whitelists,1],[this.blacklists,0]]
+            for _type, _list in _listgroup[1] {
+                _f_wintitle_alt := %("winget" _type)%(_f_wintitle)
+                for _title in _list
+                    if _f_wintitle_alt ~= _title
+                        return _listgroup[2]
+            } 
+        return true
+    }
 
     /**
      * @prop {Array} winlist
@@ -78,15 +93,6 @@ class winwiz {
          * @return {Array}
          */
         get {
-            winlist_filter(_f_wintitle, *) {
-                for _listgroup in [[this.whitelists,1],[this.blacklists,0]]
-                    for _type, _list in _listgroup[1] {
-                        _f_wintitle_alt := %("winget" _type)%(_f_wintitle)
-                        for _title in _list
-                            if _f_wintitle_alt ~= _title
-                                return _listgroup[2]
-                    } return true
-            }
             if !!_use_recent and !!this._recent_winlists_.Has(_wintitle)
                 return this._recent_winlists_[_wintitle]
             /**
@@ -94,7 +100,7 @@ class winwiz {
               */
             retwinlist :=
                 this._recent_winlists_[_wintitle] :=
-                    wingetlist(_wintitle).Filter(winlist_filter)
+                    wingetlist(_wintitle).Filter(this.bm.filterwintitle)
             return retwinlist
         }
     }

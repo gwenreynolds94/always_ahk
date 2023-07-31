@@ -190,7 +190,7 @@ class wintrans {
             else this.transpreview(_incr)
         }
 
-        activewin => winwiz.mousewintitle
+        activewin => winwiz.mousewintitle["hwnd", true]
 
         transpreview(_incr?, *) {
             nowtick := A_TickCount
@@ -198,6 +198,8 @@ class wintrans {
             curtrans := this.updownctrl.Value
             newtrans := curtrans + (_incr ?? 0)
             awin := this.activewin
+            if not awin
+                return
             if awin != this.prevactivewin
                 this.updownctrl.Value := (wincache[awin]).transparency,
                 this.updownctrl.Value += (_incrval ?? 0),
@@ -232,8 +234,7 @@ class wintrans {
             this.winsonopen := [wincache*]
             this.winsonopen.foreach(
                 (_value, _index, _this)=>(this.translvlsonopen[_value.hwnd]:=_value.transparency) )
-            this.updownctrl.value := this.prevpreviewtrans := this.translvlsonopen[awin]
-            this.prevactivewin := awin
+            this.updownctrl.value := this.prevpreviewtrans := awin ? this.translvlsonopen[awin] : 255
         }
 
         cancel(*) {
@@ -263,11 +264,14 @@ class wintrans {
             this.Submit(this.hidden:=true)
             WinWaitNotActive this
             awin := this.activewin
+            if not awin
+                awin := this.prevactivewin
             newtrans := this.updownctrl.Value
             wintrans.newstep(newtrans)
             this.translvlsonopen.where((_hwnd, _trans, *)=>(awin != _hwnd)).foreach(
                 (_hwnd, _trans, *)=>(wintrans.fade.set(_hwnd, _trans)) )
-            wintrans.set(awin, newtrans)
+            if awin
+                wintrans.set(awin, newtrans)
         }
 
         submittransall(*) {
