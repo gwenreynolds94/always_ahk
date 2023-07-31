@@ -100,7 +100,6 @@ class gen {
            /**
             * @prop {kileader} kl
             */
-    
          , kl:= kileader("CapsLock")
            /**
             * @prop {kitable} ffkt
@@ -313,7 +312,6 @@ class on_main_start {
         hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
         hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
         hotkey "$sc029", (*)=>(send("{sc029}"))
-        hotkey "$!sc03A", (*)=>(send("{Alt Down}{sc03A}{Alt Up}"))
         hotkey "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
         if __k.enabled.bcv2_on_startup
             this.start_bcv2
