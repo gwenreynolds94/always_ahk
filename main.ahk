@@ -101,7 +101,7 @@ class gen {
             * @prop {kileader} kl
             */
     
-         , kl:= kileader("vk14")
+         , kl:= kileader("$vk14")
            /**
             * @prop {kitable} ffkt
             */
@@ -287,7 +287,7 @@ class wez {
         ; kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, true, false))
         kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
         kt.hotki("AppsKey", "{F13}")
-        kt.hotki("!vk14", "{F13}")
+        kt.hotki("$!vk14", "{F13}")
 
 ;        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
 ;        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false, false))
