@@ -101,30 +101,73 @@ class wincache {
 
 class winwrapper {
     _frameboundsoffset := false
+    _frameboundsmargincorners := false
+    _frameboundsmarginrect := false
     _frameboundsmargin := false
     _alwaysontop := false
     _rect     := false
+    _realrect := false
     _exe      := ""
+    _hwnd     := 0x0
     _title    := ""
     _class    := ""
+    _transanim := false
     _transparency := 255
-    hwnd      := 0x0
+    _update_attr_min_delay_ := 100
+    _last_updated_attr_ := 0
+    _last_updates_ := Map(
+        "title", {mintk: 100, maxtk: 1000, pvtk: 0},
+        "rect", {mintk: 0, maxtk: 1000, pvtk: 0},
+        "realrect", {mintk: 0, maxtk: 1000, pvtk: 0},
+        "frameboundsmargincorners", {mintk: 100, maxtk: 100, pvtk: 0},
+        "frameboundsmarginrect", {mintk: 100, maxtk: 100, pvtk: 0},
+    )
 
     __new(_window_title:="") {
-        if not _window_title or !(this.hwnd:=_window_title.winexists())
-            return
-        this._update_attr_
+        this.hwnd := _window_title
     }
 
     _update_attr_(*) {
+        ticknow := A_TickCount
         (this.exe), (this.class), (this.rect), (this.title), (this.transparency)
-        (this.frameboundsmargincorners), (this.frameboundsmarginrect)
+        ; if (ticknow - this._last_updated_attr_) > this._update_attr_min_delay_
+            (this.frameboundsmargincorners), (this.frameboundsmarginrect)
+        this._last_updated_attr_ := ticknow
     }
 
-    exists => (this.hwnd and winexist(this))
-    title => (this.hwnd and this._title) or (this._title:=wingettitle(this.hwnd))
+    _should_update_(_propname, _return_previous:=false, *) {
+        _retbool_ := true
+        if !this._last_updates_.Has(_propname)
+            return
+        ticknow := A_TickCount
+        updt := this._last_updates_[_propname]
+        tickdelta := (ticknow - updt.pvtk)
+        if !_return_previous and (tickdelta < updt.mintk)
+            _retbool_ := false
+        else _retbool_ := !_return_previous
+        if _retbool_
+            updt.pvtk := ticknow
+        return _retbool_
+    }
+
+    hwnd {
+        get => this._hwnd
+        set {
+            this._hwnd := value
+            if this.exists
+                this._update_attr_()
+        }
+    }
+    exists => (this.hwnd and winexist(this.hwnd))
     exe => (this.hwnd and this._exe) or (this._exe:=wingetprocessname(this.hwnd))
     class => (this.hwnd and this._class) or (this._class:=wingetclass(this.hwnd))
+    title {
+        get { 
+            if this._should_update_("title", true)
+                this._title := wingettitle(this.hwnd)
+            return this._title
+        }
+    }
     ancestor[_GA_ANCESTOR:="PARENT"] {
         get {
             static GA_PARENT:=1, GA_ROOT:=2, GA_ROOTOWNER:=3
@@ -132,25 +175,93 @@ class winwrapper {
         }
     }
     rect[_return_previous:=false] {
-        get => ((_return_previous and this._rect) or (this._rect :=
-            winwiz.dll.getwindowrect.framebounds(this.hwnd).Rectified ))
+        get {
+            if !this._rect
+                this._rect := winwrapper.winrect(this)
+            else if this._should_update_("rect", _return_previous)
+                this._rect.set(winwiz.dll.getwindowrect(this.hwnd).Rectified*)
+            return this._rect
+        }
     }
-    frameboundsmargincorners[_return_previous:=false] {
-        get => ((_return_previous and this._frameboundsoffset) or (this._frameboundsoffset :=
-            winwiz.dll.dwmgetwindowattribute.extendedframeboundsoffset(this.hwnd) ))
+    realrect[_return_previous:=false] {
+        get {
+            if !this._realrect
+                this._realrect := winwiz.dll.getwindowrect(this.hwnd)
+            if this._should_update_("realrect", _return_previous)
+                this._realrect.set(winwiz.dll.getwindowrect(this.hwnd)*)
+            return this._realrect
+        }
     }
     frameboundsmarginrect[_return_previous:=false] {
-        get => ((_return_previous and this._frameboundsmargin) or (this._frameboundsmargin :=
-            winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd) ))
+        get {
+            if !this._frameboundsmarginrect
+                this._frameboundsmarginrect := 
+                    winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd)
+            else if this._should_update_("frameboundsmarginrect", _return_previous)
+                this._frameboundsmarginrect.set(
+                    winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd)*)
+            return this._frameboundsmarginrect
+        }
+    }
+    frameboundsmargincorners[_return_previous:=false] {
+        get {
+            if !this._frameboundsmargincorners
+                this._frameboundsmargincorners := 
+                    winwiz.dll.dwmgetwindowattribute.extendedframeboundsoffset(this.hwnd)
+            else if this._should_update_("frameboundsmargincorners", _return_previous)
+                this._frameboundsmargincorners.set(
+                    winwiz.dll.dwmgetwindowattribute.extendedframeboundsoffset(this.hwnd))
+            return this._frameboundsmargincorners
+        }
     }
     alwaysontop {
         get => this._alwaysontop
         set => WinSetAlwaysOnTop(this._alwaysontop:=value, this.hwnd)
     }
     transparency[_return_previous:=false] {
-        get => ((_return_previous and this._transparency) or (this._transparency :=
-            (wingettransparent(this.hwnd) or 255)))
-        set => winsettransparent(this._transparency:=integer(value), this.hwnd)
+        get => _return_previous ? this._transparency : (this._transparency := (wingettransparent(this.hwnd) or 255))
+        set => winsettransparent(this._transparency:=integer(value).min(255).max(0), this.hwnd)
+    }
+    transanim[_return_previous:=true] => (_return_previous and this._transanim) ? 
+                                                              (this._transanim) : 
+                                  (this._transanim := anim.win.trans(this.hwnd) )
+    updatepos(*) {
+        winwiz.dll.setwindowpos(this.hwnd,, this.rect.add(this.win.frameboundsmarginrect*)*)
+    }
+    
+    class winrect extends vector4.rect {
+        win := {}
+
+        __new(_win) {
+            this.win := _win
+            super.__new(winwiz.dll.getwindowrect(this.win.hwnd).Rectified*)
+        }
+
+        setpos(_x?, _y?, _w?, _h?) {
+            nt := this.__numtype__
+            if isset(_x) and isset(_y)
+                this.set(_x, _y)
+            if isset(_w) and isset(_h)
+                this.w := %nt%(_w), this.h := %nt%(_h)
+            this.updatepos()
+        }
+
+        syncpos(*) {
+            this.set(winwiz.dll.getwindowrect(this.win.hwnd).Rectified*)
+        }
+
+        updatepos(_uopts?, *) {
+            static temprect := Vector4.Rect()
+            args := [temprect.set(this*).add(this.win.frameboundsmarginrect*)*]
+            if isset(_uopts)
+                args.push _uopts
+            winwiz.dll.setwindowpos(this.win.hwnd,, args*)
+        }
+
+        stealthupdatepos(*) {
+            static SWP := winwiz.dll.setwindowpos.SWP
+            this.updatepos(SWP.NOREDRAW | SWP.NOACTIVATE | SWP.NOSENDCHANGING)
+        }
     }
 }
 #Include DEBUG\jk_debug.ahk

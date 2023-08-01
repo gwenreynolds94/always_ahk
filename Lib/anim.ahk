@@ -4,6 +4,7 @@
 #Warn All, StdOut
 #SingleInstance Force
 
+#include wincache.ahk
 #Include builtins_extended.ahk
 
 class anim {
@@ -36,7 +37,7 @@ class anim {
         this.tickstart := A_TickCount
         this.tickinterval := ( 1000 / this.fps )
         this.tickcount := this.duration / this.tickinterval
-        settimer this.bm.loop, this.tickinterval.abs()
+        settimer this.bm.loop, integer(this.tickinterval.abs())
     }
     stoploop(*) {
         settimer this.bm.loop, 0
@@ -72,44 +73,102 @@ class anim {
     }
     call(*) {
         this.tickstart := A_TickCount
-        if !this.progress
-            this.startloop
+        this.startloop
     }
+
     class win extends anim {
         wintitle := "A",
-        hwnd := 0x0,
-        winwrapr := winwrapper()
-        setwinpos := false,
-        wrect := vector4.rect(), targrect := vector4.rect()
-        modrect := vector4.rect(), rtnrect := vector4.rect()
+        win := 0x0,
+        hwnd := 0x0
 
-        __new(wintitle?) {
-            this.wintitle := wintitle ?? "A"
-            this.setwinpos := winwiz.dll.setwindowpos.bm.sansextframebounds
+        __new(_wintitle?) {
+            this.wintitle := _wintitle ?? "A"
+            this.hwnd := winexist(this.wintitle)
+            this.win := wincache[this.hwnd]
             super.__new()
         }
 
-        loop(*) {
-            if super.loop()
-                this.setwinpos(this.rtnrect*)
-        }
-
-        afterloop(*) {
-            super.afterloop()
-            this.setwinpos(this.targrect*)
-        }
-
-        call(_targrect:=false, *) {
+        call(*) {
             this.hwnd := winexist(this.wintitle)
-            if not this.hwnd
-                return false
-            this.targrect := ((_targrect is vector4) ? _targrect :
-                  (_targrect is array and _targrect.length = 4) ?
-                                   this.targrect.set(_targrect*) : this.targrect)
-            this.wrect.set(winwiz.dll.dwmgetwindowattribute.extendedframebounds(this.hwnd).rectified)
-            this.modrect.set(0)
+            if this.hwnd != this.win.hwnd
+                this.win := wincache[this.hwnd]
             super.call()
         }
 
+        class trans extends anim.win {
+            duration := 100,
+            fps := 120,
+            start_trans := 0,
+            cur_trans := 0,
+            targ_trans := 255
+
+            startloop(*) {
+                this.start_trans := this.win.transparency
+                this.cur_trans := this.start_trans
+                super.startloop()
+            }
+
+            loop(*) {
+                super.loop()
+                if this.progress
+                    this.win.transparency := this.cur_trans
+            }
+
+            afterloop(*) {
+                super.afterloop()
+                this.win.transparency := this.targ_trans
+                quiktool integer(wintrans.steps.IndexOf(this.targ_trans)) "." this.targ_trans
+            }
+
+            foreachloop(*) {
+                if not super.foreachloop()
+                    return false
+                this.cur_trans := (this.start_trans).EaseOut(this.targ_trans, this.progress)
+                return this.progress
+            }
+
+            call(_targ_trans, *) {
+                this.targ_trans := _targ_trans
+                super.call()
+            }
+        }
+
+        class rect extends anim.win {
+            duration := 2222,
+            fps := 500,
+            startrect := vector4.rect(),
+            wrect := vector4.rect(), targrect := vector4.rect()
+            modrect := vector4.rect(), rtnrect := vector4.rect()
+
+            __new(wintitle?) {
+                super.__new(wintitle?)
+            }
+
+            startloop(*) {
+                SendMessage (WM_ENTERSIZEMOVE:=0x0231),,,, this.win.hwnd
+                this.startrect.set(this.win.rect*).sub(this.win.frameboundsmarginrect*)
+                super.startloop()
+            }
+
+            loop(*) {
+                if super.loop()
+                    this.win.rect[true].stealthupdatepos()
+            }
+
+            afterloop(*) {
+                SendMessage (WM_EXITSIZEMOVE:=0x0232),,,, this.win.hwnd
+                this.win.rect[true].setpos(this.targrect*)
+                this.modrect.set(0)
+                super.afterloop()
+            }
+
+            call(_targrect:=false, *) {
+                if _targrect
+                    this.targrect.set(_targrect*)
+                super.call()
+            }
+
+        }
+ 
     }
 }

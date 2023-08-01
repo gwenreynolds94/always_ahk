@@ -82,6 +82,30 @@ class wintrans {
 
     class tgui extends gui {
 
+        static cfg := {
+                    size : vector4.rect((A_ScreenWidth / 2) - 180, 120, 360, 160)
+                  , mgn  : vector2(0, 0)
+                  , opts : "-Caption +ToolWindow"
+                }
+            ,  editcfg := { size : vector4.rect(-128, -30, 690, 220)
+                          , bg   : "ffdada"
+                          , opts : "Number -Wrap -VScroll +Center -E0x200"
+                          , font : { color : "000000"
+                                   , name : "AnonymicePro Nerd Font"
+                                   , pt : 164
+                                   , wt : 700 }
+                          , placeholder : ""  }
+             /**
+             * @prop {wintrans.tgui} inst
+             */
+            ,  inst := {}
+
+        static __new() {
+            for _vctr in [this.cfg.size, this.cfg.mgn, this.editcfg.size]
+                _vctr.__numtype__ := "int"
+            this.inst := this()
+        }
+
         /**
          * @prop {Gui.Edit} editctrl
          */
@@ -280,32 +304,6 @@ class wintrans {
             wintrans.newstep(newtrans)
             wintrans.fade.setall(newtrans)
         }
-
-        static cfg := {
-                    size : vector4.rect((A_ScreenWidth / 2) - 180, 120, 360, 160)
-                  , mgn  : vector2(0, 0)
-                  , opts : "-Caption +ToolWindow"
-                }
-            ,  editcfg := { size : vector4.rect(-128, -30, 690, 220)
-                          , bg   : "ffdfdf"
-                          , opts : "Number -Wrap -VScroll +Center -E0x200"
-                          , font : { color : "000000"
-                                   , name : "AnonymicePro Nerd Font"
-                                   , pt : 164
-                                   , wt : 700 }
-                          , placeholder : ""  }
-             /**
-             * @prop {wintrans.tgui} inst
-             */
-            ,  inst := {}
-
-
-
-        static __new() {
-            for _vctr in [this.cfg.size, this.cfg.mgn, this.editcfg.size]
-                _vctr.__numtype__ := "int"
-            this.inst := this()
-        }
     }
 
     class fade extends anim {
@@ -322,23 +320,26 @@ class wintrans {
 
 
         static set(_hwnd, _transparency:=255) {
-            instance := this()
-            instance.wintitle := _hwnd
-            instance(instance, Integer(_transparency).min(255).max(1))
+            win := wincache[_hwnd]
+            (win.transanim)(_transparency)
+; ;;            instance := this()
+; ;;            instance.wintitle := _hwnd
+; ;;            instance(instance, Integer(_transparency).min(255).max(1))
         }
 
         static step(_hwnd, _reverse:=false) {
-            target_win := wincache[_hwnd]
+            win := wincache[_hwnd]
             new_trans_index := wintrans.steps.IndexOf(
-                (target_win.transparency).nearest(wintrans.steps*)) + (_reverse ? (-1) : 1)
+                (win.transparency).nearest(wintrans.steps*)) + (_reverse ? (-1) : 1)
             if new_trans_index > wintrans.steps.length
                 new_trans_index := 1
             else if new_trans_index < 1
                 new_trans_index := wintrans.steps.length
             new_trans := wintrans.steps[new_trans_index]
-            instance := this()
-            instance.wintitle := _hwnd
-            instance(instance, new_trans)
+            (win.transanim)(new_trans)
+; ;;            instance := this()
+; ;;            instance.wintitle := _hwnd
+; ;;            instance(instance, new_trans)
         }
 
         static setactive(_transparency:=255) {
@@ -378,7 +379,7 @@ class wintrans {
         afterloop(*) {
             super.afterloop()
             this.win.transparency := this.target_trans
-            quiktool integer(wintrans.steps.IndexOf(this.target_trans)) . "." . this.target_trans
+            quiktool integer(wintrans.steps.IndexOf(this.target_trans)) . "." . this.target_trans "..." this.win.title
         }
 
         foreachloop(*) {

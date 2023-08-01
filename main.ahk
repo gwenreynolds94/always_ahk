@@ -14,8 +14,9 @@ setwindelay 0
 
 #Include <builtins_extended>
 #Include <config_tool>
-#Include <winwiz>
+#Include <wincache>
 #Include <wintrans>
+#Include <winwiz>
 #Include <kitable>
 #Include <quiktip>
 #Include <volctrl>

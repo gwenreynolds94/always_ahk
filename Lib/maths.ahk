@@ -13,6 +13,10 @@ class Math {
         static imprecise(_v1, _v2, _t) => _v1 + _t * (_v2 - _v1)
         static precise(_v1, _v2, _t) => (1 - _t) * _v1 + _t * _v2
         static call(_v1, _v2, _t) => Math.Lerp.%(Math.Lerp.precision)%(_v1, _v2, _t)
+        static Flip(_v1) => 1 - _v1
+        static EaseIn(_v1, _v2, _t) => this(_v1, _v2, _t ** 2)
+        static EaseOut(_v1, _v2, _t) => this(_v1, _v2, this.flip(this.flip(_t) ** 2))
+        static Bezier(_v1, _v2, _t) => _v1 + (_t * _t * (3 - 2 * _t) * (_v2 - _v1))
     }
     class Vector {
         ___bm___ := {
@@ -24,13 +28,9 @@ class Math {
         ___numtype___ := "float"
         __numtype__ {
             get => this.___numtype___
-            set => ( this.___numtype___ := (
-                (value ~= "fl(oa)?t")   ? "float"   :
-                (value ~= "int(eger)?") ? "integer" :
-                this.___numtype___ ), this.__propslist__.ForEach((
-                        (_v,_i,_t)=>(this.%_v%:=%(this.___numtype___)%(this.%_v%))
-                    ))
-                )
+            set => (this.___numtype___ := (value ~= "fl(oa)?t")   ? "float"   :
+                                          (value ~= "int(eger)?") ? "integer" : 
+                                                           this.___numtype___ )
         }
         __new(_values*){
             if !_values.length
@@ -41,21 +41,44 @@ class Math {
                 _values.push 0
             return this.set(_values*)
         }
-        Anon4(_method, _v1, _v2?, _v3?, _v4?) {
+        Anon4(_method, _v1?, _v2?, _v3?, _v4?) {
+            /**
+            argset := ["_v1", "_v2", "_v3", "_v4"]
+
+            number_foreach(_v, _i, _t) {
+                pname := this.__propslist__[_i]
+                this.%pname% := _method(this.%pname%, %_v%)
+            }
+
+            vector_foreach(_v, _i, _t) {
+                pname := this.__propslist__[_i]
+                if objhasownprop(%_v%, _pname)
+                    this.%pname% := _method(this.%pname%, %_v%.%pname%)
+            }
+
+            argsetvalid := argset.Filter((_v, _i *)=>(isset(%_v%)))
+
+            if (argsetvalid.length = 1) and (argsetvalid[1] = "_v1") {
+                if _v1 is number
+                    _v4 := _v3 := _v2 := _v1, argsetvalid.ForEach(number_foreach)
+                else if _v1 is Math.Vector
+                    argsetvalid.ForEach(vector_foreach)
+            } else argsetvalid.ForEach(number_foreach)
+            
+            return this
+            */
+
             if _v1 is number {
                 if !isset(_v2) and !isset(_v3) and !isset(_v4)
                     return this.Anon4(_method, _v1, _v1, _v1, _v1)
                 for _crd in this.__propslist__
                     if isset( %("_v" A_Index)% )
-                        this.%_crd% := _method(this.%_crd%, %("_v" A_Index)%)
-                    else return this
+                        this.%_crd% := _method(this.%_crd%, %(this.__numtype__)%(%("_v" A_Index)%))
             } else if _v1 is Math.Vector {
                 for _crd in this.__propslist__
                     if objhasownprop(_v1, _crd)
-                        this.%_crd% := _method(this.%_crd%, _v1.%_crd%)
-                    else return this
+                        this.%_crd% := _method(this.%_crd%, %(this.__numtype__)%(_v1.%_crd%))
             }
-            this.__numtype__ := this.__numtype__
             return this
         }
         Equals(_v2) {
@@ -71,13 +94,15 @@ class Math {
         HasOwnProp(_propname) => !(_propname.StartsWith("_") or !objhasownprop(this, _propname))
         OwnProps(*) => [objownprops(this)*].Filter((_v)=>(!_v.startswith("_")))
         Lerp(_v, _t)=> this.anon4((__v2,__v1)=>(Math.Lerp(__v2, __v1, _t)), _v)
+        Bezier(_v, _t)=> this.anon4((__v2,__v1)=>(Math.Lerp.Bezier(__v2, __v1, _t)), _v)
+        EaseOut(_v, _t)=> this.anon4((__v2,__v1)=>(Math.Lerp.EaseOut(__v2, __v1, _t)), _v)
         Sub(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2 - __v1), _v1, _v2?, _v3?, _v4?)
         Add(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2 + __v1), _v1, _v2?, _v3?, _v4?)
         Div(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2 / __v1), _v1, _v2?, _v3?, _v4?)
         Mul(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2 * __v1), _v1, _v2?, _v3?, _v4?)
         Min(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2.min(__v1)), _v1, _v2?, _v3?, _v4?)
         Max(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v2.max(__v1)), _v1, _v2?, _v3?, _v4?)
-        Set(_v1, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v1), _v1, _v2?, _v3?, _v4?)
+        Set(_v1?, _v2?, _v3?, _v4?)=> this.anon4((__v2,__v1)=>(__v1), _v1?, _v2?, _v3?, _v4?)
 
         __enum(_vcnt:=2) {
             _enum_(_vcount, &_v1?, &_v2?, &_v3?, &_v4?) {
@@ -161,6 +186,7 @@ class Vector3 extends Math.Vector {
     x := 0
     y := 0
     z := 0
+    __propslist__ => ["x", "y", "z"]
     __new(_x?, _y?, _z?) {
         super.__new(_x ?? 0, _y?, _z?)
     }
@@ -177,6 +203,7 @@ class Vector4 extends Math.Vector {
     y := 0
     z := 0
     w := 0
+    __propslist__ => ["x", "y", "z", "w"]
     __new(_x?, _y?, _z?, _w?) {
         super.__new(_x ?? 0, _y?, _z?, _w?)
     }

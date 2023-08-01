@@ -1,5 +1,7 @@
 ; builtins_extended.ahk
 
+#include maths.ahk
+
 Class __Float extends Float {
     static __New() {
         this.Prototype.__Class := "Float"
@@ -41,6 +43,8 @@ Class __Number extends Number {
     }
 
     Lerp(_v2, _t) => Math.Lerp(this, _v2, _t)
+    EaseOut(_v2, _t) => Math.Lerp.EaseOut(this, _v2, _t)
+    Bezier(_v2, _t) => Math.Lerp.Bezier(this, _v2, _t)
     Min(_values*) => Min(this, _values*)
     Max(_values*) => Max(this, _values*)
     Mod(_divisor) => Mod(this, _divisor)
@@ -330,6 +334,5 @@ class FuncArray extends Array {
     }
 }
 
-#include maths.ahk
 
 

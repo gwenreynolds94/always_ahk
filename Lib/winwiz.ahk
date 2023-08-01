@@ -106,7 +106,7 @@ class winwiz {
     }
 
 
-    class wiggle extends anim.win {
+    class wiggle extends anim.win.rect {
           cycles := 10
         , amplitude := 32
         foreachloop() {
@@ -114,33 +114,35 @@ class winwiz {
                 return (false)
             this.modrect.x := sin(2 * Math.PI * this.cycles * this.progress) * this.amplitude
             this.modrect.y := cos(2 * Math.PI * this.cycles * this.progress) * this.amplitude * 0.75
-            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.wrect, cos(2 * Math.PI * this.progress))
+            this.rtnrect.set(this.startrect).add(this.modrect).lerp(this.startrect, cos(2 * Math.PI * this.progress))
             return this.progress
         }
     }
 
-    class spring extends anim.win {
+    class spring extends anim.win.rect {
         targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
         amplitude := 64,
         cycles := 5
         foreachloop(*) {
             if not super.foreachloop()
-                return (this.wrect.set(this.targrect), false)
+                return (this.startrect.set(this.targrect), false)
             this.modrect.y := cos(2 * Math.PI * this.progress * this.cycles) * this.amplitude * 0.75
-            this.rtnrect.set(this.wrect).add(this.modrect).lerp(this.targrect, cos(2 * Math.PI) * this.progress)
+            this.rtnrect.set(this.startrect).add(this.modrect).lerp(this.targrect, cos(2 * Math.PI) * this.progress)
             return this.progress
         }
     }
 
-    class slide extends anim.win {
-        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
-        duration := 333
-        fps := 120
+    class slide extends anim.win.rect {
+        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8)
         foreachloop(*) {
             if not super.foreachloop()
                 return false
-            this.modrect.set(this.targrect).sub(this.wrect).mul(sin(0.5 * Math.PI * this.progress)).add(this.wrect)
-            this.rtnrect.set(this.wrect).lerp(this.modrect, sin(0.5 * Math.PI * this.progress))
+            ; this.modrect.set(this.targrect*).sub(this.startrect).mul(this.progress).add(this.startrect)
+            ; this.win.rect.set(this.startrect*).lerp(this.modrect, sin(0.5 * Math.PI * this.progress))
+            this.win.rect[true].set(this.startrect*).lerp(
+                this.targrect, 
+                sin(0.5 * Math.PI * this.progress).bezier(1, this.progress.bezier(1, this.progress))
+            )
             return this.progress
         }
     }
@@ -473,6 +475,12 @@ class winwiz {
             static framebounds(_hwnd?) =>
                 winwiz.dll.dwmgetwindowattribute.extendedframebounds(
                                     winexist((_hwnd ?? "A") or "A"))
+
+            static frameboundsmargin(_hwnd) {
+                extfrmbnds := winwiz.dll.dwmgetwindowattribute.extendedframebounds(_hwnd).rectified
+                ncwinrect  := winwiz.dll.getwindowrect(_hwnd).rectified
+                return ncwinrect.sub(extfrmbnds)
+            }
         }
 
         class dwmgetwindowattribute {
