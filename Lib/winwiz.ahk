@@ -139,10 +139,8 @@ class winwiz {
                 return false
             ; this.modrect.set(this.targrect*).sub(this.startrect).mul(this.progress).add(this.startrect)
             ; this.win.rect.set(this.startrect*).lerp(this.modrect, sin(0.5 * Math.PI * this.progress))
-            this.win.rect[true].set(this.startrect*).lerp(
-                this.targrect, 
-                sin(0.5 * Math.PI * this.progress).bezier(1, this.progress.bezier(1, this.progress))
-            )
+            asin := sin(0.5 * Math.PI * sin(0.5 * Math.PI * this.progress)) ** 4
+            this.win.rect[true].set(this.startrect*).lerp( this.animate_resize ? this.targrect : this.targrect.Pos, asin )
             return this.progress
         }
     }

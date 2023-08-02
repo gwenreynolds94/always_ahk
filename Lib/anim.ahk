@@ -78,6 +78,9 @@ class anim {
 
     class win extends anim {
         wintitle := "A",
+        /**
+         * @prop {winwrapper} win
+         */
         win := 0x0,
         hwnd := 0x0
 
@@ -98,9 +101,11 @@ class anim {
         class trans extends anim.win {
             duration := 100,
             fps := 120,
+            progmod := 1,
             start_trans := 0,
             cur_trans := 0,
             targ_trans := 255
+            
 
             startloop(*) {
                 this.start_trans := this.win.transparency
@@ -134,8 +139,9 @@ class anim {
         }
 
         class rect extends anim.win {
-            duration := 2222,
-            fps := 500,
+            animate_resize := false
+            duration := 666,
+            fps := 333,
             startrect := vector4.rect(),
             wrect := vector4.rect(), targrect := vector4.rect()
             modrect := vector4.rect(), rtnrect := vector4.rect()
@@ -146,7 +152,9 @@ class anim {
 
             startloop(*) {
                 SendMessage (WM_ENTERSIZEMOVE:=0x0231),,,, this.win.hwnd
-                this.startrect.set(this.win.rect*).sub(this.win.frameboundsmarginrect*)
+                this.startrect.set(this.win.visrect)
+                if !this.animate_resize
+                    this.startrect.add(this.targrect.size.sub(this.startrect.size))
                 super.startloop()
             }
 

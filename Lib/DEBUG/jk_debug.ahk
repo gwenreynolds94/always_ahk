@@ -51,8 +51,6 @@ class ___DBG___ {
 
     static __new() {
     }
-    static asd => (13,235,32,46,34,6,346,34,6,36,
-        0,045)
 
     static parseopts(&_opts, &_cfgs, _strip_opts:=true, _fill_opts:=true, _set_cfgs:=false, _whatif:=false) {
         if !objhasownprop(_opts, "__o__")
@@ -65,13 +63,15 @@ class ___DBG___ {
         return map("opts", _opts, "cfgs", _cfgs)
     }
 
+    static debugviewexists => winexist("ahk_class dbgviewClass")
+
     static opendebugview(*) {
         static _exe_path := "C:\Users\" A_UserName "\Portables\sysinternals\DebugView\dbgview64.exe"
-        if not winexist("ahk_class dbgviewClass.exe") {
+        if not this.debugviewexists {
             run _exe_path,,, &_dbgview_pid:=0
             winwait "ahk_pid " _dbgview_pid
-            winactivate "ahk_pid " _dbgview_pid
         }
+        winactivate "ahk_pid " _dbgview_pid
     }
 
     static prevwin => (
@@ -93,7 +93,7 @@ class ___DBG___ {
 
 __DBG__describe(_opts?, _objlist*) {
     if not _objlist.Length
-        return
+        return "_objlist needs to contain something"
     desc := ""
     _opts := (_opts ?? false) or ___DBG___.cfg.desc.clone()
     nestlvl := 0
@@ -250,7 +250,6 @@ __DBG__describe(_opts?, _objlist*) {
         out_str .= CollectOwnProps(out_item)
         nestlvl--
         return out_str
-
     }
 
     for _itm in _objlist {
@@ -286,14 +285,14 @@ dbgln(_olist*) {
     if _olist.length and isobject(_olist[1]) and objhasownprop(_olist[1], "__o__") {
         uopts := _olist[1]
         _olist:=_olist.fromrange(has_uopts:=2)
-    } else uopts := __dbgln_desc__.clone()
+    } else (uopts := __dbgln_desc__.clone(), has_uopts:=1)
     ___DBG___.parseopts(&uopts, &__dbgln_desc__, false, true)
 
     uopts := (has_uopts ? uopts : __dbgln_desc__)
 
-    if (!!uopts.opendebugview)
+    if (!!uopts.opendebugview and !___DBG___.debugviewexists)
         ___DBG___.bm.opendebugview()
-    if (!!uopts.focusdebugview) {
+    else if (!!uopts.focusdebugview) {
         ___DBG___.bm.activatedebugview()
         if !!uopts.focusprevwin
             settimer(___DBG___.bm.activateprevwin, uopts.focusprevwintimeout.neg())

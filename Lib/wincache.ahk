@@ -106,7 +106,7 @@ class winwrapper {
     _frameboundsmargin := false
     _alwaysontop := false
     _rect     := false
-    _realrect := false
+    _visrect := false
     _exe      := ""
     _hwnd     := 0x0
     _title    := ""
@@ -118,7 +118,7 @@ class winwrapper {
     _last_updates_ := Map(
         "title", {mintk: 100, maxtk: 1000, pvtk: 0},
         "rect", {mintk: 0, maxtk: 1000, pvtk: 0},
-        "realrect", {mintk: 0, maxtk: 1000, pvtk: 0},
+        "visrect", {mintk: 0, maxtk: 1000, pvtk: 0},
         "frameboundsmargincorners", {mintk: 100, maxtk: 100, pvtk: 0},
         "frameboundsmarginrect", {mintk: 100, maxtk: 100, pvtk: 0},
     )
@@ -179,17 +179,17 @@ class winwrapper {
             if !this._rect
                 this._rect := winwrapper.winrect(this)
             else if this._should_update_("rect", _return_previous)
-                this._rect.set(winwiz.dll.getwindowrect(this.hwnd).Rectified*)
+                this._rect.set(winwiz.dll.getwindowrect(this.hwnd))
             return this._rect
         }
     }
-    realrect[_return_previous:=false] {
+    visrect[_return_previous:=false] {
         get {
-            if !this._realrect
-                this._realrect := winwiz.dll.getwindowrect(this.hwnd)
-            if this._should_update_("realrect", _return_previous)
-                this._realrect.set(winwiz.dll.getwindowrect(this.hwnd)*)
-            return this._realrect
+            if !this._visrect
+                this._visrect := winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)
+            if this._should_update_("visrect", _return_previous)
+                this._visrect.set(winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)*)
+            return this._visrect
         }
     }
     frameboundsmarginrect[_return_previous:=false] {
@@ -237,13 +237,18 @@ class winwrapper {
             super.__new(winwiz.dll.getwindowrect(this.win.hwnd).Rectified*)
         }
 
-        setpos(_x?, _y?, _w?, _h?) {
+        setpos(_x?, _y?, _w?, _h?, _uopts?, *) {
             nt := this.__numtype__
             if isset(_x) and isset(_y)
                 this.set(_x, _y)
             if isset(_w) and isset(_h)
                 this.w := %nt%(_w), this.h := %nt%(_h)
-            this.updatepos()
+            this.updatepos(_uopts?)
+        }
+
+        stealthsetpos(_x?, _y?, _w?, _h?, *) {
+            static SWP := winwiz.dll.setwindowpos.SWP
+            this.setpos(_x?, _y?, _w?, _h?, SWP.NOREDRAW | SWP.NOACTIVATE | SWP.NOSENDCHANGING)
         }
 
         syncpos(*) {

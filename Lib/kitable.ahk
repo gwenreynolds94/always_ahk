@@ -4,7 +4,6 @@
 
 #Include builtins_extended.ahk
 
-
 class kitable extends map {
 
     static previd := 0
@@ -24,6 +23,8 @@ class kitable extends map {
     oneshot := false,
     prevhotif := false,
     hotifexpr := false,
+    hotifmap := Map()
+    allkis := Map(),
     kimap := Map(),
     kimaplvl := 1,
     id := 0
@@ -52,14 +53,12 @@ class kitable extends map {
     enable(*) {
         kidisable := this.bm.disable
         funcwrapr := this.bm.funcwrapr
-        ; hotifexpr := (_hotifexpr is func) ? _hotifexpr : this.hotifexpr
         hotifexpr := this.hotifexpr
         if !!hotifexpr
             hotif((this.prevhotif:=hotifexpr))
         for _key, _action in this {
-            use_action := (_action is kitable) ?
-                funcwrapr.bind(_action.bm.enable.bind(hotifexpr), this.oneshot) : funcarray(_action)
-            Hotkey _key, use_action, "On"
+            fnwrapr := funcwrapr.bind(_action is kitable ? _action.bm.enable  : _action, this.oneshot)
+            hotkey _key, fnwrapr , "On"
         }
         if !!hotifexpr
             hotif()
@@ -166,6 +165,13 @@ class kitable extends map {
         this.pathki(_kipath, (*)=>(run(_browser " " _linkaddr)))
 
     fflinkki(_kipath, _linkaddr, *) => this.linkki(_kipath, _linkaddr, "firefox.exe")
+
+    class kache extends map {
+        oneshot := false
+        actions := false
+        parent  := false
+        root    := false
+    }
 }
 
 class kileader extends kitable {
