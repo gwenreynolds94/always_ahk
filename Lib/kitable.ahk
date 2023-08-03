@@ -20,9 +20,10 @@ class kitable extends map {
     _enabled := false,
     timeout := false,
     child_timeout := false,
+    child_oneshot := false,
     oneshot := false,
     prevhotif := false,
-    hotifexpr := false,
+    _hotifexpr := false,
     hotifmap := Map()
     allkis := Map(),
     kimap := Map(),
@@ -32,10 +33,11 @@ class kitable extends map {
     /**
      * @param {String|Integer|Number} [_timeout=2000]
      */
-    __New(_timeout:=0, _oneshot:=false, _child_timeout:=2250, _hotifexpr:=false) {
+    __New(_timeout:=0, _oneshot:=false, _child_timeout:=2250, _child_oneshot:=false, _hotifexpr:=false) {
         this.timeout := _timeout
         this.child_timeout := _child_timeout
-        this.oneshot := _oneshot or this.oneshot
+        this.oneshot := _oneshot
+        this.child_oneshot := _child_oneshot
         this.hotifexpr := _hotifexpr or this.hotifexpr
         this.id := kitable.previd++
         this.bm.enable := ObjBindMethod(this, "enable")
@@ -43,6 +45,17 @@ class kitable extends map {
         this.bm.toggle := ObjBindMethod(this, "toggle")
         this.bm.funcwrapr := ObjBindMethod(this, "funcwrapr")
         this.bm.ontimeout := ObjBindMethod(this, "ontimeout")
+    }
+
+    hotifexpr[_applytochildren:=true] {
+        get => this._hotifexpr
+        set {
+            this._hotifexpr := value
+            if _applytochildren
+                for _key, _itm in this
+                    if _itm is kitable
+                        _itm.hotifexpr := value
+        }
     }
 
     enabled {
@@ -55,19 +68,20 @@ class kitable extends map {
         funcwrapr := this.bm.funcwrapr
         hotifexpr := this.hotifexpr
         if !!hotifexpr
-            hotif((this.prevhotif:=hotifexpr))
+            hotif(this.prevhotif := (_args*)=>(!!this._enabled and !!hotifexpr(_args*)))
         for _key, _action in this {
-            fnwrapr := funcwrapr.bind(_action is kitable ? _action.bm.enable  : _action, this.oneshot)
-            hotkey _key, fnwrapr , "On"
+            fnwrapr := funcwrapr.bind(_action is kitable ? _action.bm.enable  : _action)
+            hotkey _key, fnwrapr.bind(this.oneshot) , "On"
         }
-        if !!hotifexpr
-            hotif()
+        hotif()
         if this.timeout
             SetTimer kidisable, ((-1) * abs(this.timeout))
         return (this._enabled := true)
     }
 
     disable(*) {
+        if !this._enabled
+            return false
         kidisable := this.bm.disable
         SetTimer(kidisable,0)
         hotifexpr := this.prevhotif
@@ -143,7 +157,8 @@ class kitable extends map {
             for _ki in kipath {
                 tblmap := tblpath[tblpath.Length]
                 if !tblmap.Has(_ki)
-                    tblmap[_ki] := kitable(this.child_timeout, true)
+                    tblmap[_ki] := kitable( this.child_timeout, true, 
+                        this.child_timeout, this.child_oneshot, this.hotifexpr )
                 tblpath.push tblmap[_ki]
             } until (A_Index+1) >= kplen
         }
@@ -175,13 +190,36 @@ class kitable extends map {
 }
 
 class kileader extends kitable {
+    /**
+     * @prop {string} leader
+     */
     leader := ""
-    root := {}
+    _leader := ""
+    /**
+     * @prop {kitable} root
+     */
+    root := ""
+    _root := ""
 
-    __new(_leader:="LAlt & RALt", _parent_timeout:=0, _oneshot:=false, _child_timeout:=2250, _hotifexpr:=false) {
-        super.__new(_parent_timeout, _oneshot, _child_timeout, _hotifexpr)
+
+    __new(_leader:="LAlt & RALt", _parent_timeout:=0, _oneshot:=false,
+          _child_timeout:=2250, _child_oneshot:=false, _hotifexpr:=false) {
+        super.__new(_parent_timeout, _oneshot, _child_timeout, _child_oneshot, _hotifexpr)
         this.leader := _leader
-        this.root := this[this.leader] := kitable(this.child_timeout, true)
+        this[this.leader] := this.root
+    }
+    root {
+        get {
+            if !this._root {
+                _root := kitable( this.child_timeout, this.child_oneshot,
+                                  this.child_timeout, this.child_oneshot, this.hotifexpr )
+                if this.has(this._leader)
+                    _root := this[this._leader]
+            } else _root := this._root
+            this._root := _root
+            return this._root
+        }
+        set => this._root := value
     }
 
     hotki(_ki, _actions, *) {

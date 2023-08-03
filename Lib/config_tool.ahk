@@ -154,7 +154,7 @@ Class conf_tool {
 
         __get(Key, Params) {
             Return IniRead(conf_tool.setting.current_file_path,
-                            conf_tool.setting.current_section, Key, "")
+                            conf_tool.setting.current_section, Key, false)
         }
 
         __set(Key, Params, Value) {
@@ -252,12 +252,19 @@ Class conf_tool {
         setup_gui() {
             this._gui := Gui("+AlwaysOnTop", "Edit" this._section "Gui", this)
             this.update_content()
+            ctrlopts := "xp+0 y+10 w" this._item_width
             for _key, _value in this._content {
                 if this._value_type ~= "bool" {
                     this._guictrls[_key] :=
-                        this._gui.AddCheckbox("xp+0 y+10 w" this._item_width, _key)
+                        this._gui.AddCheckbox(ctrlopts, _key)
                     this._guictrls[_key].Value := _value
                     this._guictrls[_key].OnEvent("Click", "checkbox_on_click")
+                }
+                else if this._value_type ~= "str|mix|num" {
+                    this._guictrls[_key "title"] := this._gui.AddText("v" _key "_text " ctrlopts, _key)
+                    this._guictrls[_key "title"].SetFont(,"FiraCode Nerd Font Mono")
+                    this._guictrls[_key] := this._gui.AddEdit("v" _key " " ctrlopts, _value)
+                    this._guictrls[_key].OnEvent("Change", "textedit_on_change")
                 }
             }
 
@@ -283,7 +290,7 @@ Class conf_tool {
             }
         }
 
-        /**
+        /**)
          *
          */
         exit_btn_on_click(*) {
@@ -294,7 +301,19 @@ Class conf_tool {
          * @param {Gui.Control} _guictrl 
          */
         checkbox_on_click(_guictrl, *) {
-            this._conftool.ini.%(this._section)%.%(_guictrl.Text)% := _guictrl.Value
+            this._conftool.ini.%this._section%.%_guictrl.Text% := _guictrl.Value
+        }
+
+        textedit_on_change(_guictrl, *) {
+            static starttick := 0,
+                   prevtick := 0,
+                   newtick := 0
+            newtick := A_TickCount
+            if (newtick - prevtick) < 200
+                return
+            this._gui.Submit(false)
+            this._conftool.ini.%this._section%.%_guictrl.Name% := _guictrl.Value
+            prevtick := newtick
         }
 
         show(*) {

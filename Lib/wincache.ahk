@@ -11,13 +11,15 @@ class wincache {
     static _item_cache_ := Map()
         ,  _dead_item_cache_ := Map()
         ,  _last_cleanup_ := 0
-        ,  _cleanup_interval_ := 3
+        ,  _cleanup_interval_ := 5
 
     static __item[_win_title, _winwrapr_prop?] {
 
         get {
             wincache.incrlastcleanup
             _win_title := (_win_title = "A") ? winexist("A") : _win_title
+            if not _win_title
+                return false
             if _win_title and (_win_title is number) {
                 if wincache._item_cache_.has(_win_title) and wincache._item_cache_[_win_title].exists
                     return wincache._item_cache_[_win_title]
@@ -106,7 +108,7 @@ class winwrapper {
     _frameboundsmargin := false
     _alwaysontop := false
     _rect     := false
-    _visrect := false
+    _realrect := false
     _exe      := ""
     _hwnd     := 0x0
     _title    := ""
@@ -118,7 +120,6 @@ class winwrapper {
     _last_updates_ := Map(
         "title", {mintk: 100, maxtk: 1000, pvtk: 0},
         "rect", {mintk: 0, maxtk: 1000, pvtk: 0},
-        "visrect", {mintk: 0, maxtk: 1000, pvtk: 0},
         "frameboundsmargincorners", {mintk: 100, maxtk: 100, pvtk: 0},
         "frameboundsmarginrect", {mintk: 100, maxtk: 100, pvtk: 0},
     )
@@ -183,13 +184,13 @@ class winwrapper {
             return this._rect
         }
     }
-    visrect[_return_previous:=false] {
+    realrect[_return_previous:=false] {
         get {
-            if !this._visrect
-                this._visrect := winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)
-            if this._should_update_("visrect", _return_previous)
-                this._visrect.set(winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)*)
-            return this._visrect
+            if !this._realrect
+                this._realrect := winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)
+            if this._should_update_("realrect", _return_previous)
+                this._realrect.set(winwiz.dll.getwindowrect(this.hwnd).sub(this.frameboundsmarginrect[_return_previous]*)*)
+            return this._realrect
         }
     }
     frameboundsmarginrect[_return_previous:=false] {
@@ -230,20 +231,30 @@ class winwrapper {
     }
     
     class winrect extends vector4.rect {
-        win := {}
+        win := {},
+        tmprect := Vector4.Rect()
 
         __new(_win) {
             this.win := _win
-            super.__new(winwiz.dll.getwindowrect(this.win.hwnd).Rectified*)
+            super.__new()
+            this.syncpos()
         }
 
         setpos(_x?, _y?, _w?, _h?, _uopts?, *) {
             nt := this.__numtype__
-            if isset(_x) and isset(_y)
+            tmprect := this.tmprect
+            hasxy := isset(_x) and isset(_y)
+            haswh := isset(_w) and isset(_h)
+            if hasxy
                 this.set(_x, _y)
-            if isset(_w) and isset(_h)
+            if haswh
                 this.w := %nt%(_w), this.h := %nt%(_h)
-            this.updatepos(_uopts?)
+            tmprect.set(this*).add(this.win.frameboundsmarginrect[true]*)
+            winwiz.dll.setwindowpos(this.win.hwnd,,
+                                    hasxy ? tmprect.x : unset, 
+                                    hasxy ? tmprect.y : unset,
+                                    haswh ? tmprect.w : unset,
+                                    haswh ? tmprect.h : unset, _uopts?)
         }
 
         stealthsetpos(_x?, _y?, _w?, _h?, *) {
@@ -252,12 +263,15 @@ class winwrapper {
         }
 
         syncpos(*) {
-            this.set(winwiz.dll.getwindowrect(this.win.hwnd).Rectified*)
+            this.set(
+                winwiz.dll.getwindowrect(this.win.hwnd).rectified.sub(
+                     winwiz.dll.dwmgetwindowattribute.extendedframebounds(this.win.hwnd)*) 
+            )
         }
 
         updatepos(_uopts?, *) {
             static temprect := Vector4.Rect()
-            args := [temprect.set(this*).add(this.win.frameboundsmarginrect*)*]
+            args := [temprect.set(this*).add(this.win.frameboundsmarginrect[true]*)*]
             if isset(_uopts)
                 args.push _uopts
             winwiz.dll.setwindowpos(this.win.hwnd,, args*)

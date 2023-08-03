@@ -99,13 +99,17 @@ class anim {
         }
 
         class trans extends anim.win {
-            duration := 100,
-            fps := 120,
+            duration := 333,
+            fps := 60,
+            speed := 0.01,
+            speeddelta := 0.1,
+            accel := 1.2,
+            maxspeed := 100,
+            friction := 0.975,
             progmod := 1,
             start_trans := 0,
             cur_trans := 0,
             targ_trans := 255
-            
 
             startloop(*) {
                 this.start_trans := this.win.transparency
@@ -128,7 +132,8 @@ class anim {
             foreachloop(*) {
                 if not super.foreachloop()
                     return false
-                this.cur_trans := (this.start_trans).EaseOut(this.targ_trans, this.progress)
+
+                this.cur_trans := (this.start_trans).bezier(this.targ_trans, this.progress.bezier(1, this.progress))
                 return this.progress
             }
 
@@ -139,9 +144,9 @@ class anim {
         }
 
         class rect extends anim.win {
-            animate_resize := false
-            duration := 666,
-            fps := 333,
+            animate_resize := true
+            duration := 500,
+            fps := 500,
             startrect := vector4.rect(),
             wrect := vector4.rect(), targrect := vector4.rect()
             modrect := vector4.rect(), rtnrect := vector4.rect()
@@ -151,29 +156,28 @@ class anim {
             }
 
             startloop(*) {
-                SendMessage (WM_ENTERSIZEMOVE:=0x0231),,,, this.win.hwnd
-                this.startrect.set(this.win.visrect)
-                if !this.animate_resize
-                    this.startrect.add(this.targrect.size.sub(this.startrect.size))
+                this.startrect.set(this.win.rect)
+                ; SendMessage (WM_ENTERSIZEMOVE:=0x0231),,,, this.win.hwnd
                 super.startloop()
             }
 
             loop(*) {
                 if super.loop()
-                    this.win.rect[true].stealthupdatepos()
+                    this.win.rect[true].updatepos()
+                else this.win.rect[true].updatepos()
             }
 
             afterloop(*) {
-                SendMessage (WM_EXITSIZEMOVE:=0x0232),,,, this.win.hwnd
+                ; SendMessage (WM_EXITSIZEMOVE:=0x0232),,,, this.win.hwnd
                 this.win.rect[true].setpos(this.targrect*)
                 this.modrect.set(0)
                 super.afterloop()
             }
 
             call(_targrect:=false, *) {
+                super.call()
                 if _targrect
                     this.targrect.set(_targrect*)
-                super.call()
             }
 
         }

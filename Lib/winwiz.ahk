@@ -120,7 +120,7 @@ class winwiz {
     }
 
     class spring extends anim.win.rect {
-        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
+        targrect := vector4.rect(4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8),
         amplitude := 64,
         cycles := 5
         foreachloop(*) {
@@ -133,22 +133,24 @@ class winwiz {
     }
 
     class slide extends anim.win.rect {
-        targrect := vector4.rect(A_ScreenWidth + 4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8)
+        animate_resize := true
+        targrect := vector4.rect(4, 4, A_ScreenWidth - 8, A_ScreenHeight - 8)
         foreachloop(*) {
             if not super.foreachloop()
                 return false
             ; this.modrect.set(this.targrect*).sub(this.startrect).mul(this.progress).add(this.startrect)
             ; this.win.rect.set(this.startrect*).lerp(this.modrect, sin(0.5 * Math.PI * this.progress))
             asin := sin(0.5 * Math.PI * sin(0.5 * Math.PI * this.progress)) ** 4
-            this.win.rect[true].set(this.startrect*).lerp( this.animate_resize ? this.targrect : this.targrect.Pos, asin )
+            this.win.rect[true].set(this.startrect*).lerp( this.targrect, asin * this.progress )
             return this.progress
         }
     }
 
     static loopwindows(_reverse:=false, _wintitle:="", _always_switch:=false, _use_recent_winlist:=false, *) {
         ; static setwinpos := winwiz.dll.setwindowpos, SWP := setwinpos.SWP, HWND_ := setwinpos.HWND
-        _wintitle := (!!_wintitle and !!winexist(_wintitle)) ? _wintitle : ""
+        _wintitle := (!!_wintitle and !!winexist(_wintitle)) ? _wintitle : "A"
         targwins := wincache[_wintitle]
+        targwins := (targwins is array) ? targwins : [targwins]
         if (targwins.length = 1) and !!(_wintitle) and _always_switch
             targwins := this.winlist
         if (winlen := targwins.length) < 1
@@ -247,12 +249,11 @@ class winwiz {
         hwnd2 := winexist(_wtitle2)
         w1 := wincache[hwnd1]
         w2 := wincache[hwnd2]
-        nrect1 := vector4.rect(w2.rect*).add(w1.frameboundsmarginrect)
-        nrect2 := vector4.rect(w1.rect*).add(w2.frameboundsmarginrect)
-        winwiz.dll.setwindowpos(hwnd1,,[nrect1*].extend(SWP.SHOWWINDOW | SWP.FRAMECHANGED)*)
-        winwiz.dll.setwindowpos(hwnd2,,[nrect2*].extend(SWP.SHOWWINDOW | SWP.FRAMECHANGED)*)
-        winactivate hwnd2
-        winactivate hwnd1
+        vr1 := w1.realrect
+        vr2 := w2.realrect
+        w1.rect.set(vr2*)
+        w2.rect[true].set(vr1*)
+        w1.rect[true].updatepos(SWP.FRAMECHANGED|SWP.SHOWWINDOW)
     }
 
     static swaponpress(_key:="LButton") {
@@ -324,7 +325,7 @@ class winwiz {
             this.home.mousepos.set(winwiz.dll.mouse.cursorpos)
             settimer _moving_, this.timerinterval
             _moving_(*) {
-                if !getkeystate(this.holdtomove.Replace("^[\+\!\#\^]+"), "P") {
+                if !getkeystate(this.holdtomove.Replace("^[\~\$\*\+\!\#\^]+"), "P") {
                     settimer(,0)
                     this.ismoving := false
                     return
@@ -344,7 +345,7 @@ class winwiz {
             settimer _sizing_, this.timerinterval
             postmessage 0x1666,1,,, this.home.win
             _sizing_(*) {
-                if !getkeystate(this.holdtosize.replace("^[\+\!\#\^]+"), "P") {
+                if !getkeystate(this.holdtosize.replace("^[\-\$\*\+\!\#\^]+"), "P") {
                     settimer(,0)
                     this.issizing := false
                     postmessage 0x1666,0,,, this.home.win

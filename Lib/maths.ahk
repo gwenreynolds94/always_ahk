@@ -42,42 +42,39 @@ class Math {
             return this.set(_values*)
         }
         Anon4(_method, _v1?, _v2?, _v3?, _v4?) {
-            /**
-            argset := ["_v1", "_v2", "_v3", "_v4"]
-
-            number_foreach(_v, _i, _t) {
-                pname := this.__propslist__[_i]
-                this.%pname% := _method(this.%pname%, %_v%)
+            nt := this.__numtype__
+            argmap := map(
+                  "_v1", _v1 ?? "unset"
+                , "_v2", _v2 ?? "unset"
+                , "_v3", _v3 ?? "unset"
+                , "_v4", _v4 ?? "unset"
+            )
+            argtst := argmap.where( (_k, _v, _i, _t)=> ( 
+                    (this.__propslist__.length >= _i) and (_v != "unset") ) )
+            argcnt := argtst.Count
+            if !argcnt
+                return this
+            argkey := argtst.Keys()[1]
+            argval := argtst[argkey]
+            if (argcnt = 1) {
+                if (argval is number) {
+                    for _propname in this.__propslist__
+                        this.%_propname% := _method(this.%_propname%, %nt%(argval))
+                    return this
+                } else if (argval is Math.Vector) {
+                    for _propname in this.__propslist__
+                        this.%_propname% := _method(this.%_propname%, %nt%(argval.%_propname%))
+                    return this
+                }
             }
-
-            vector_foreach(_v, _i, _t) {
-                pname := this.__propslist__[_i]
-                if objhasownprop(%_v%, _pname)
-                    this.%pname% := _method(this.%pname%, %_v%.%pname%)
-            }
-
-            argsetvalid := argset.Filter((_v, _i *)=>(isset(%_v%)))
-
-            if (argsetvalid.length = 1) and (argsetvalid[1] = "_v1") {
-                if _v1 is number
-                    _v4 := _v3 := _v2 := _v1, argsetvalid.ForEach(number_foreach)
-                else if _v1 is Math.Vector
-                    argsetvalid.ForEach(vector_foreach)
-            } else argsetvalid.ForEach(number_foreach)
-            
-            return this
-            */
-
-            if _v1 is number {
-                if !isset(_v2) and !isset(_v3) and !isset(_v4)
-                    return this.Anon4(_method, _v1, _v1, _v1, _v1)
-                for _crd in this.__propslist__
-                    if isset( %("_v" A_Index)% )
-                        this.%_crd% := _method(this.%_crd%, %(this.__numtype__)%(%("_v" A_Index)%))
-            } else if _v1 is Math.Vector {
-                for _crd in this.__propslist__
-                    if objhasownprop(_v1, _crd)
-                        this.%_crd% := _method(this.%_crd%, %(this.__numtype__)%(_v1.%_crd%))
+            for _argname, _arg in argtst {
+                propname := this.__propslist__[A_Index]
+                prop := this.%propname%
+                if _arg is number
+                    this.%propname% := _method(prop, %nt%(_arg))
+                else if %_argname% is math.vector
+                    if objhasownprop(_arg, propname)
+                        this.%propname% := _method(prop, %nt%(_arg.%propname%))
             }
             return this
         }
