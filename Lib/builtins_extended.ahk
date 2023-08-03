@@ -321,18 +321,72 @@ Class __Map extends Map {
 
 }
 
-class FuncArray extends Array {
+class funcarray extends array {
+
     call(_args*) {
         retvals := []
         for _func in this
-            if _func is func or hasmethod(_func, "call") {
+            if _func is func or hasmethod(_func, "call")
                 if (_funcargs:=_args.fromrange(!!_func.call.maxparams, _func.call.maxparams))
                     retvals.push(_func(_funcargs*))
-            } else if (_func is string)
-                send(_func)
         return retvals
+    }
+
+    class actions extends funcarray {
+        /**
+         * @param {Array} _args
+         */
+        call(_args*) {
+            _args.Filter2((_v,*)=>(_v is func), &_truelist:=0, &_falselist:=0)
+            actionresults := super(_truelist*)
+            for _arg in _falselist
+                if _arg is string
+                    send(_arg)
+            return actionresults
+        }
     }
 }
 
+class HotIfArray extends Array {
+    bmhotifnot := objbindmethod(this, "hotifnot")
+    hotifnots := []
+    notfuncs := []
 
+    __new(_hotifs*) {
+        _hotifs.filter2((_v, *)=>((_v is func) or !!hasmethod(_v, "call")), &_funclist:=0, &_notfunclist:=0)
+        this.push(_funclist*)
+        this.notfuncs.push(_notfunclist*)
+    }
+
+    hotifnot(_hotifnots*) {
+        _hotifnots.filter2((_v, *)=>((_v is func) or !!hasmethod(_v, "call")), &_funclist:=0, &_notfunclist:=0)
+        this.hotifnots.push(_funclist*)
+        this.notfuncs.push(_notfunclist*)
+    }
+
+    hotif(_hotifs*) {
+        _hotifs.filter2((_v, *)=>((_v is func) or !!hasmethod(_v, "call")), &_funclist:=0, &_notfunclist:=0)
+        this.push(_funclist*)
+        this.notfuncs.push(_notfunclist*)
+    }
+
+    hotifactive(_wintitles*) {
+        for _wtitle in _wintitles
+            this.push((*)=>(!!winactive(_wtitle)))
+    }
+    hotifnotactive(_wintitles*) {
+        for _wtitle in _wintitles
+            this.hotifnots.push((*)=>(!!winactive(_wtitle)))
+    }
+
+    call(*) {
+        for _hotifnot in this.hotifnots
+            if _hotifnot()
+                return false
+        for _hotif in this
+            if not _hotif()
+                return false
+        return true
+    }
+}
 

@@ -14,6 +14,8 @@ class kitable extends map {
         toggle: {},
         funcwrapr: {},
         ontimeout: {},
+        hotifwrapr: {},
+        isenabled: {},
         fflinkki: objbindmethod(this, "linkki", unset, unset, "firefox.exe")
     },
 
@@ -23,7 +25,8 @@ class kitable extends map {
     child_oneshot := false,
     oneshot := false,
     prevhotif := false,
-    _hotifexpr := false,
+    hotifexpr := false,
+    neghotif := false,
     hotifmap := Map()
     allkis := Map(),
     kimap := Map(),
@@ -33,11 +36,13 @@ class kitable extends map {
     /**
      * @param {String|Integer|Number} [_timeout=2000]
      */
-    __New(_timeout:=0, _oneshot:=false, _child_timeout:=2250, _child_oneshot:=false, _hotifexpr:=false) {
+    __New(_timeout:=0, _oneshot:=false, _child_timeout:=2250, 
+                _child_oneshot:=false, _hotifexpr:=false, _neghotif:=false) {
         this.timeout := _timeout
         this.child_timeout := _child_timeout
         this.oneshot := _oneshot
         this.child_oneshot := _child_oneshot
+        this.neghotif := _neghotif or this.neghotif
         this.hotifexpr := _hotifexpr or this.hotifexpr
         this.id := kitable.previd++
         this.bm.enable := ObjBindMethod(this, "enable")
@@ -45,52 +50,53 @@ class kitable extends map {
         this.bm.toggle := ObjBindMethod(this, "toggle")
         this.bm.funcwrapr := ObjBindMethod(this, "funcwrapr")
         this.bm.ontimeout := ObjBindMethod(this, "ontimeout")
+        this.bm.isenabled := ((_this, *)=>(!!_this.enabled)).Bind(this)
+        this.bm.hotifwrapr := objbindmethod(this, "hotifwrapr", this.bm.isenabled)
     }
 
-    hotifexpr[_applytochildren:=true] {
-        get => this._hotifexpr
-        set {
-            this._hotifexpr := value
-            if _applytochildren
-                for _key, _itm in this
-                    if _itm is kitable
-                        _itm.hotifexpr := value
-        }
-    }
 
     enabled {
         get => this._enabled
         set => (!!Value ? (this.enable()) : (this.disable()))
     }
 
+    hotifwrapr(_callables*) {
+        for _item in _callables
+            if (_item is func) or HasMethod(_item, "call")
+                if !_item()
+                    return false
+        return true
+    }
+
     enable(*) {
         kidisable := this.bm.disable
         funcwrapr := this.bm.funcwrapr
-        hotifexpr := this.hotifexpr
-        if !!hotifexpr
-            hotif(this.prevhotif := (_args*)=>(!!this._enabled and !!hotifexpr(_args*)))
+        ; hotifexpr := this.bm.hotifwrapr.bind(this.bm.isenabled)
+        hotifwrapr := HotIfArray(this.hotifexpr, this.bm.isenabled)
+        this.prevhotif := hotifwrapr
+        hotif hotifwrapr
         for _key, _action in this {
-            fnwrapr := funcwrapr.bind(_action is kitable ? _action.bm.enable  : _action)
-            hotkey _key, fnwrapr.bind(this.oneshot) , "On"
+            newaction := _action is kitable ? _action.bm.enable : _action
+            fn := funcwrapr.bind(newaction)
+            hotkey _key, fn.bind(this.oneshot) , "On"
         }
-        hotif()
+        hotif
         if this.timeout
             SetTimer kidisable, ((-1) * abs(this.timeout))
         return (this._enabled := true)
     }
 
     disable(*) {
-        if !this._enabled
-            return false
+;        if !this._enabled
+;            return false
         kidisable := this.bm.disable
         SetTimer(kidisable,0)
         hotifexpr := this.prevhotif
         if !!hotifexpr
             hotif(hotifexpr)
         for _ki, _action in this
-            Hotkey _ki, "Off"
-        if !!hotifexpr
-            hotif()
+            try Hotkey(_ki, "Off")
+        hotif()
         return (this._enabled := false)
     }
 
@@ -203,7 +209,7 @@ class kileader extends kitable {
 
 
     __new(_leader:="LAlt & RALt", _parent_timeout:=0, _oneshot:=false,
-          _child_timeout:=2250, _child_oneshot:=false, _hotifexpr:=false) {
+          _child_timeout:=2250, _child_oneshot:=true, _hotifexpr:=false) {
         super.__new(_parent_timeout, _oneshot, _child_timeout, _child_oneshot, _hotifexpr)
         this.leader := _leader
         this[this.leader] := this.root

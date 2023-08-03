@@ -60,12 +60,12 @@ __always_config.config_defaults := Map(
     "ktblgen", Map(
         "leadercaps"       , true ,
         "firefox"          , true ,
+        "wezterm"          , true ,
         "winmode"          , true ,
         "winleader"        , true ,
         "default"          , true ,
     ),
     "ktblapp", Map(
-        "wezterm"         , true ,
         "death_stranding" , true ,
     ),
     "misc", Map(
@@ -109,6 +109,18 @@ class gen {
             */
          , ffkt:= kitable()
            /**
+            * @prop {kitable} antiffkt
+            */
+         , antiffkt:= kitable()
+           /**
+            * @prop {kitable} wzkt
+            */
+         , wzkt := kitable()
+           /**
+            * @prop {kitable} antiffkt
+            */
+         , antiwzkt:= kitable()
+           /**
             * @prop {kitable} knto
             */
          , knto:= kitable()
@@ -145,14 +157,18 @@ class gen {
         anim_top_full:=anims.top_full:=[anims.misc_anim.set(anims.btm_full*).sub(0,a_screenheight,0,0)*]
 
         kt := this.kt
-        kt.hotifexpr := (*)=>(!!__k.ktblgen.default)
+        kthotif := HotIfArray()
+        kthotif.hotif (*)=>(!!__k.ktblgen.default and !!kt.bm.isenabled)
+        kthotif.hotifnotactive( "ahk_exe wezterm-gui.exe"
+                              , "ahk_exe firefox.exe"
+                              , "ahk_exe ds.exe" )
 
         kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 244, "{XButton2}")
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
         kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false, false))
         kt.hotki("XButton2 & MButton", ((*)=>(winactivate(twin:=winwiz.winfromzoffset[4]))))
 
-        kt.dblki("$XButton1", "{Ctrl Down}c{Ctrl Up}", 244, "{XButton1}")
+        kt.dblki("XButton1", "{Ctrl Down}c{Ctrl Up}", 244, "{XButton1}")
         kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
 
@@ -201,7 +217,7 @@ class gen {
 
         kl.fflinkki(["l", "p", "a", "y"], "paypal.com")
         kl.fflinkki(["l", "t", "x", "t"], "textnow.com")
-        kl.fflinkki(["l", "y", "o", "u"], "youtube.com")
+        kl.fflinkki(["l", "y", "o", "u"], "y}outube.com")
         kl.fflinkki(["l", "d", "d", "g"], "duckduckgo.com")
 
         
@@ -221,6 +237,11 @@ class gen {
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
         ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
         ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
+
+        antiffkt := this.antiffkt
+
+        wzkt := this.wzkt
+        antiwzkt := this.antiwzkt
 
         knto := this.knto
         knto.hotifexpr := (*)=>(!!__k.ktblgen.winmode)
@@ -272,15 +293,15 @@ class dskt extends kitable {
 
     __new() {
         super.__new()
-        this.hotifexpr := (*)=>(winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
+        this.hotifexpr := (*)=>(!!winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
         this.hotki "MButton", "{LButton Down}{RButton Down}"
         this.hotki "MButton Up", "{RButton Up}{LButton Up}"
         this.hotki "!q", dskt.bm.toggle_forward
         this.hotki "w", ((*)=>(send("{w Down}")))
         this.hotki "w Up", ((*)=>(send("{w Up}"), dskt._moving_forward:=false))
         this.hotki "XButton1", "{w}"
-        this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 245, dskt.bm.toggle_forward
         this.hotki "XButton1 Up", "{w Up}"
+        this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 245, dskt.bm.toggle_forward
     }
 }
 
@@ -301,14 +322,12 @@ class wez {
         kt.dblki("XButton2", wintrans.tgui.inst.bmtoggle, 242, "{Ctrl Down}i{Ctrl Up}")
         kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
         kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        kt.hotki("~XButton1", "{XButton1}")
-        kt.hotki("~XButton2", "{XButton2}")
         kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
         ; kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, this.wintitle, true, false))
         ; kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, true, false))
-        kt.dblki("~LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
+        kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
         kt.hotki("*AppsKey", "{F13}")
-        kt.hotki("!CapsLock", "{F13}")
+        kt.hotki("CapsLock & Tab", "{F13}")
 
 ;        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
 ;        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false, false))
@@ -333,6 +352,8 @@ class on_main_start {
         hotkey "sc029 & e", (*)=>(keywait("sc029", "T2"), __k.edit_enabled_gui.bm.toggle())
         hotkey "sc029 & q", (*)=>exitapp()
         hotkey "sc029 & h", (*)=>ListHotkeys()
+        hotkey "sc029 & l", (*)=>ListLines()
+        hotkey "sc029 & v", (*)=>ListVars()
         hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
         hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
         hotkey "sc029 & 3", __k.edit_misc_gui.bm.toggle

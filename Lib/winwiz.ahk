@@ -252,8 +252,9 @@ class winwiz {
         vr1 := w1.realrect
         vr2 := w2.realrect
         w1.rect.set(vr2*)
-        w2.rect[true].set(vr1*)
+        w2.rect.set(vr1*)
         w1.rect[true].updatepos(SWP.FRAMECHANGED|SWP.SHOWWINDOW)
+        w2.rect[true].updatepos(SWP.FRAMECHANGED|SWP.SHOWWINDOW)
     }
 
     static swaponpress(_key:="LButton") {
