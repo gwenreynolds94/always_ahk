@@ -151,7 +151,7 @@ class gen {
         marg := anims.margins
         anim_full:=anims.full:=[anims.misc_anim.set(marg.x ,marg.y - A_ScreenHeight, (a_screenwidth - marg.x - marg.w) , ((2 * a_screenheight) - marg.y - marg.h))*]
         anim_btm_full:=anims.btm_full:=[anims.misc_anim.set(marg.x, marg.y, a_screenwidth - marg.x - marg.w, a_screenheight - marg.y - marg.h)*]
-        anim_btm_half_left:=anims.btm_half_left:=[anims.misc_anim.mul(1,1,0.5,1).sub(0,0,(marg.x + marg.w) / 2,0)*]
+        anim_btm_half_left:=anims.btm_half_left:=[anims.misc_anim.mul(1,1,0.5,1)*]
         anim_btm_half_right:=anims.btm_half_right:=[anims.misc_anim.add(anims.btm_half_left[3],0,0,0)*]
         anim_top_half_right:=anims.top_half_right:=[anims.misc_anim.sub(0,a_screenheight,0,0)*]
         anim_top_half_left:=anims.top_half_left:=[anims.misc_anim.sub(anims.top_half_right[3],0,0,0)*]
@@ -369,10 +369,10 @@ class on_main_start {
 
 
 hotif (*)=>!!__k.enabled.pcnm_hotstrings
-hotstring ":*:cmpnm", (*)=>send(A_ComputerName)
-hotstring ":*:cmppr", (*)=>send(sys.defpcs["primary"].fullname)
-hotstring ":*:cmpop", (*)=>send(sys.defpcs["optiplex"].fullname)
-hotstring ":*:cmplp", (*)=>send(sys.defpcs["laptop"].fullname)
+hotstring ":*?:cmpnm", (*)=>send(A_ComputerName)
+hotstring ":*?:cmppr", (*)=>send(sys.defpcs["primary"].fullname)
+hotstring ":*?:cmpop", (*)=>send(sys.defpcs["optiplex"].fullname)
+hotstring ":*?:cmplp", (*)=>send(sys.defpcs["laptop"].fullname)
 hotif
 
 

@@ -321,7 +321,8 @@ class wintrans {
 
         static set(_hwnd, _transparency:=255) {
             win := wincache[_hwnd]
-            (win.transanim)(_transparency)
+            if win
+                (win.transanim)(_transparency)
 ; ;;            instance := this()
 ; ;;            instance.wintitle := _hwnd
 ; ;;            instance(instance, Integer(_transparency).min(255).max(1))
@@ -329,6 +330,8 @@ class wintrans {
 
         static step(_hwnd, _reverse:=false) {
             win := wincache[_hwnd]
+            if not win
+                return false
             new_trans_index := wintrans.steps.IndexOf(
                 (win.transparency).nearest(wintrans.steps*)) + (_reverse ? (-1) : 1)
             if new_trans_index > wintrans.steps.length

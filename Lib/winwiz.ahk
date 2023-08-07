@@ -148,7 +148,6 @@ class winwiz {
 
     static loopwindows(_reverse:=false, _wintitle:="", _always_switch:=false, _use_recent_winlist:=false, *) {
         ; static setwinpos := winwiz.dll.setwindowpos, SWP := setwinpos.SWP, HWND_ := setwinpos.HWND
-        _wintitle := (!!_wintitle and !!winexist(_wintitle)) ? _wintitle : "A"
         targwins := wincache[_wintitle]
         targwins := (targwins is array) ? targwins : [targwins]
         if (targwins.length = 1) and !!(_wintitle) and _always_switch
