@@ -13,15 +13,17 @@ class sys {
             launch_env_path : ObjBindMethod(sys.launch_env_vars, "edit_usr_path")
         }
         , pc := 0
+        , pcalias := ""
+        , pcsuffix := 0
+        , pcfullname := ""
+        , defpcs := Map("primary",  { pc: 1, pcalias: "primary" , suffix: "HQ7DNU5", fullname: "DESKTOP-HQ7DNU5" } ;
+                      , "optiplex", { pc: 2, pcalias: "optiplex", suffix: "HJ4S4Q2", fullname: "DESKTOP-HJ4S4Q2" } ;
+                      , "laptop",   { pc: 3, pcalias: "laptop"  , suffix: "JJTV8BS", fullname: "DESKTOP-JJTV8BS" } )
     static __new() {
-        switch A_ComputerName {
-            case "DESKTOP-HQ7DNU5":
-                this.pc := 1
-            case "DESKTOP-JJTV8BS":
-                this.pc := 2
-            case "DESKTOP-HJ4S4Q2":
-                this.pc := 3
-        }
+        this.pcsuffix := A_ComputerName.Replace("DESKTOP-")
+        for _pcnm, _pc in this.defpcs
+            if _pc.suffix = this.pcsuffix
+                this.pc := _pc.pc, this.pcfullname := _pc.fullname, this.pcalias := _pcnm
     }
     class launch_env_vars {
         static sys_prop_adv_title := "System Properties"

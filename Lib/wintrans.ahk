@@ -141,14 +141,14 @@ class wintrans {
         , bmtranspreview := {}
         , bmtranspreviewall := {}
         , translvlsonopen := Map()
-        , updownincrement := 10
-        , deltacapmod := 1.1
+        , updownincrement := 5
         , winsonopen := []
         , prevpreviewtrans := 255
         , prevactivewin := 0x00000
         , previewmode := "one"
         , lastpreview := 0
         , lastpreviewall := 0
+        , deltacapmod := 1.1
         __new() {
             tgui := wintrans.tgui
             ecfg := tgui.editcfg

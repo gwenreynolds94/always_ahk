@@ -41,7 +41,7 @@ class anim {
     }
     stoploop(*) {
         settimer this.bm.loop, 0
-        this.afterloop()
+        this.afterloop
     }
     afterloop(*) {
         this.progress := 0
@@ -102,9 +102,8 @@ class anim {
             duration := 333,
             fps := 60,
             speed := 0.01,
-            speeddelta := 0.1,
-            accel := 1.2,
-            maxspeed := 100,
+            accel := 1.05,
+            maxspeed := 2,
             friction := 0.975,
             progmod := 1,
             start_trans := 0,

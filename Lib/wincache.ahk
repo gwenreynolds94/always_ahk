@@ -17,17 +17,9 @@ class wincache {
 
         get {
             wincache.incrlastcleanup
-            _win_title := (_win_title = "A") ? winexist("A") : _win_title
-            if not _win_title
-                return false
-            if _win_title and (_win_title is number) {
-                if wincache._item_cache_.has(_win_title) and wincache._item_cache_[_win_title].exists
-                    return wincache._item_cache_[_win_title]
-                else if (newwin:=winwrapper(_win_title)).exists
-                    return (wincache._item_cache_[_win_title]:=newwin)
-                else return false
-            }
             wlist := !!_win_title ? winwiz.winlist[_win_title] : winwiz.winlist
+            if !!_win_title and !!winexist(_win_title) and !wlist.length
+                wlist := wingetlist(_win_title)
             rwlist := []
             haswraprprop := isset(_winwrapr_prop)
             for _hwnd in wlist {
@@ -42,6 +34,7 @@ class wincache {
                     else rwlist.push(wincache._item_cache_[_hwnd])
                 }
             }
+            rwlist := (rwlist.length > 1) ? rwlist : (rwlist.length = 1) ? rwlist[1] : 0
             return rwlist
         }
     }
@@ -282,11 +275,4 @@ class winwrapper {
             this.updatepos(SWP.NOREDRAW | SWP.NOACTIVATE | SWP.NOSENDCHANGING)
         }
     }
-}
-#Include DEBUG\jk_debug.ahk
-^0::{
-    dbgln({__o__:1,printfuncs:0, nestlvlmax:2},("*-".repeat(66) "`n").repeat(5), wincache*)
-}
-^9::{
-    dbgln({__o__:1,nestlvlmax:4},("*--".repeat(30)), wincache["A"])
 }

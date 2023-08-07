@@ -56,6 +56,7 @@ __always_config.config_defaults := Map(
     "enabled", Map(
         "fuck_cortana"    , true ,
         "bcv2_on_startup" , true ,
+        "pcnm_hotstrings" , true ,
     ),
     "ktblgen", Map(
         "leadercaps"       , true ,
@@ -189,7 +190,6 @@ class gen {
 ;; ;        kt.hotki "sc029 & MButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
 ;; ;        kt.hotki "sc029 & RButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
 
-
         winwiz.drag.setholdtomove("!+LButton")
         winwiz.drag.setholdtosize("!+RButton")
 
@@ -214,24 +214,21 @@ class gen {
         kl.progki(["o", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe On"))
         kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
 
-
         kl.fflinkki(["l", "p", "a", "y"], "paypal.com")
         kl.fflinkki(["l", "t", "x", "t"], "textnow.com")
-        kl.fflinkki(["l", "y", "o", "u"], "y}outube.com")
+        kl.fflinkki(["l", "y", "o", "u"], "youtube.com")
+        kl.fflinkki(["l", "a", "n", "i"], "aniwave.to")
         kl.fflinkki(["l", "d", "d", "g"], "duckduckgo.com")
 
-        
         wkl := this.wkl
         wkl.hotifexpr := (*)=>(!!__k.ktblgen.winleader)
-        wkl.pathki( ["Space" , "AppsKey" ], anims.slide.bm.call.bind(anims.full     ) )
-        wkl.pathki( ["Space" , "." ], anims.slide.bm.call.bind(anims.btm_full       ) )
-        wkl.pathki( ["Space" , "," ], anims.slide.bm.call.bind(anims.btm_half_left  ) )
-        wkl.pathki( ["Space" , ";" ], anims.slide.bm.call.bind(anims.top_full       ) )
-        wkl.pathki( ["Space" , "/" ], anims.slide.bm.call.bind(anims.btm_half_right ) )
-        wkl.pathki( ["Space" , "l" ], anims.slide.bm.call.bind(anims.top_half_left  ) )
-        wkl.pathki( ["Space" , "'" ], anims.slide.bm.call.bind(anims.top_half_right ) )
-
-
+        wkl.pathki( [ "Space" , "AppsKey" ], anims.slide.bm.call.bind(anims.full     ) )
+        wkl.pathki( [ "Space" , "." ], anims.slide.bm.call.bind(anims.btm_full       ) )
+        wkl.pathki( [ "Space" , "," ], anims.slide.bm.call.bind(anims.btm_half_left  ) )
+        wkl.pathki( [ "Space" , ";" ], anims.slide.bm.call.bind(anims.top_full       ) )
+        wkl.pathki( [ "Space" , "/" ], anims.slide.bm.call.bind(anims.btm_half_right ) )
+        wkl.pathki( [ "Space" , "l" ], anims.slide.bm.call.bind(anims.top_half_left  ) )
+        wkl.pathki( [ "Space" , "'" ], anims.slide.bm.call.bind(anims.top_half_right ) )
 
         ffkt := this.ffkt
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
@@ -256,54 +253,52 @@ class gen {
 
         kt.hotki("AppsKey & /", this.knto.bm.toggle)
 
-
-
         coordmode "tooltip", "screen"
     }
 }
 
-class dskt extends kitable {
-
-    /**
-     * @prop {dskt} instance
-     */
-    static bm := {
-            toggle_forward : objbindmethod(this, "toggle_forward")
-        }
-        , _moving_forward := false
-        , _holding_left := false
-        , _holding_right := false
-        , instance := this()
-
-    static toggle_forward(*) {
-        if (this._moving_forward:=!this._moving_forward)
-            send "{w Down}"
-        else send("{w Up}")
-    }
-
-    static toggle_leftrighthold(*) {
-        if not (this._holding_left and this._holding_right) {
-            this._holding_left := this._holding_right := true
-        }
-        else {
-            this._holding_left := this._holding_right := false
-            ; ...
-        }
-    }
-
-    __new() {
-        super.__new()
-        this.hotifexpr := (*)=>(!!winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
-        this.hotki "MButton", "{LButton Down}{RButton Down}"
-        this.hotki "MButton Up", "{RButton Up}{LButton Up}"
-        this.hotki "!q", dskt.bm.toggle_forward
-        this.hotki "w", ((*)=>(send("{w Down}")))
-        this.hotki "w Up", ((*)=>(send("{w Up}"), dskt._moving_forward:=false))
-        this.hotki "XButton1", "{w}"
-        this.hotki "XButton1 Up", "{w Up}"
-        this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 245, dskt.bm.toggle_forward
-    }
-}
+;; class dskt extends kitable {
+;; 
+;;     /**
+;;      * @prop {dskt} instance
+;;      */
+;;     static bm := {
+;;             toggle_forward : objbindmethod(this, "toggle_forward")
+;;         }
+;;         , _moving_forward := false
+;;         , _holding_left := false
+;;         , _holding_right := false
+;;         , instance := this()
+;; 
+;;     static toggle_forward(*) {
+;;         if (this._moving_forward:=!this._moving_forward)
+;;             send "{w Down}"
+;;         else send("{w Up}")
+;;     }
+;; 
+;;     static toggle_leftrighthold(*) {
+;;         if not (this._holding_left and this._holding_right) {
+;;             this._holding_left := this._holding_right := true
+;;         }
+;;         else {
+;;             this._holding_left := this._holding_right := false
+;;             ; ...
+;;         }
+;;     }
+;; 
+;;     __new() {
+;;         super.__new()
+;;         this.hotifexpr := (*)=>(!!winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
+;;         this.hotki "MButton", "{LButton Down}{RButton Down}"
+;;         this.hotki "MButton Up", "{RButton Up}{LButton Up}"
+;;         this.hotki "!q", dskt.bm.toggle_forward
+;;         this.hotki "w", ((*)=>(send("{w Down}")))
+;;         this.hotki "w Up", ((*)=>(send("{w Up}"), dskt._moving_forward:=false))
+;;         this.hotki "XButton1", "{w}"
+;;         this.hotki "XButton1 Up", "{w Up}"
+;;         this.dblki "XButton2", ((*)=>(send("{Shift Down}"),sleep(20),send("{Shift Up}"))), 245, dskt.bm.toggle_forward
+;;     }
+;; }
 
 class wez {
     /**
@@ -316,7 +311,6 @@ class wez {
 
         kt := this.kt := kitable()
         kt.hotifexpr := (*)=>(WinActive("ahk_exe wezterm-gui.exe") and !!__k.ktblmisc.wezterm)
-
 
         kt.hotki("XButton1", "{Ctrl Down}o{Ctrl Up}")
         kt.dblki("XButton2", wintrans.tgui.inst.bmtoggle, 242, "{Ctrl Down}i{Ctrl Up}")
@@ -349,11 +343,15 @@ class on_main_start {
         wez.kl.enabled := true
 
         hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
-        hotkey "sc029 & e", (*)=>(keywait("sc029", "T2"), __k.edit_enabled_gui.bm.toggle())
+        hotkey "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
         hotkey "sc029 & q", (*)=>exitapp()
         hotkey "sc029 & h", (*)=>ListHotkeys()
         hotkey "sc029 & l", (*)=>ListLines()
         hotkey "sc029 & v", (*)=>ListVars()
+        hotkey "sc029 & s", (*)=>Suspend()
+        hotkey "sc029 & F1", quiktool.call.bind(
+                quiktool, A_Clipboard:=A_ComputerName, { x:A_ScreenWidth - 50
+                                                     ,   y:A_ScreenHeight - 25 }, 6666 )
         hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
         hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
         hotkey "sc029 & 3", __k.edit_misc_gui.bm.toggle
@@ -369,6 +367,13 @@ class on_main_start {
     }
 }
 
+
+hotif (*)=>!!__k.enabled.pcnm_hotstrings
+hotstring ":*:cmpnm", (*)=>send(A_ComputerName)
+hotstring ":*:cmppr", (*)=>send(sys.defpcs["primary"].fullname)
+hotstring ":*:cmpop", (*)=>send(sys.defpcs["optiplex"].fullname)
+hotstring ":*:cmplp", (*)=>send(sys.defpcs["laptop"].fullname)
+hotif
 
 
 ;;  class __s {
