@@ -158,11 +158,6 @@ class gen {
         anim_top_full:=anims.top_full:=[anims.misc_anim.set(anims.btm_full*).sub(0,a_screenheight,0,0)*]
 
         kt := this.kt
-        kthotif := HotIfArray()
-        kthotif.hotif (*)=>(!!__k.ktblgen.default and !!kt.bm.isenabled)
-        kthotif.hotifnotactive( "ahk_exe wezterm-gui.exe"
-                              , "ahk_exe firefox.exe"
-                              , "ahk_exe ds.exe" )
 
         kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 244, "{XButton2}")
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
@@ -173,30 +168,22 @@ class gen {
         kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
 
-;        kt.hotki("AppsKey & RShift", winwiz.bm.loopwindows.bind(false, "" false, false))
-;        kt.hotki("AppsKey &  RCtrl", winwiz.bm.loopwindows.bind(true, "" false, false))
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("<#f", wintrans.fade.bm.stepactive.bind(true))
         kt.hotki("<!<#f", wintrans.fade.bm.stepactive.bind(false))
         kt.hotki "<^<#f", wintrans.tgui.inst.bmtoggle
         kt.hotki "~<+<#f", wintrans.bm.removeactivestep
-        ; kt.hotki "~Alt & /", ((*)=>(winactivate(winwiz.winfromzoffset[2,,!!GetKeyState("Shift")])))
-;; ; ;; ; When MWB hooks into the keyboard/mouse, hotkeys don't work on other computers, 
-;; ; ;; ; ;; ; so no hooking hotkeys set in MWB (CTRL+ALT+[F1,F2,F3,F4], etc.)
-;; ;        kt.hotki "sc029 & Left", (*)=>(keywait("sc029"), send("{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
-;; ;        kt.hotki "sc029 & Down", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
-;; ;        kt.hotki "sc029 & Right", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
-;; ;        kt.hotki "sc029 & LButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F1}{Alt Up}{Ctrl Up}"))
-;; ;        kt.hotki "sc029 & MButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F3}{Alt Up}{Ctrl Up}"))
-;; ;        kt.hotki "sc029 & RButton", (*)=>(keywait("sc029"), send( "{Ctrl Down}{Alt Down}{F4}{Alt Up}{Ctrl Up}"))
 
         winwiz.drag.setholdtomove("!+LButton")
         winwiz.drag.setholdtosize("!+RButton")
 
         kl := this.kl
         kl.hotifexpr := (*)=>( !!__k.ktblgen.leadercaps)
+        hotif gen.kl.bm.isenabled
+        hotkey "*AppsKey", kl.root.bm.enable
+        hotif
 
-        kl.pathki(["t", "w", "e"], wez.kt.bm.toggle)
+        kl.pathki(["t", "w", "e"], gen.wzkt.bm.toggle)
         kl.pathki(["a", "h", "h"], winwiz.bm.searchv2docs.bind(0, 0))
         kl.pathki(["a", "h", "+h"], winwiz.bm.searchv2docs.bind(0, 1))
         kl.pathki(["a", "o", "t"], (*)=>(wincache["A"].alwaysontop := 1))
@@ -218,7 +205,10 @@ class gen {
         kl.fflinkki(["l", "t", "x", "t"], "textnow.com")
         kl.fflinkki(["l", "y", "o", "u"], "youtube.com")
         kl.fflinkki(["l", "a", "n", "i"], "aniwave.to")
+        kl.fflinkki(["l", "f", "m", "v"], "fmovies.llc")
         kl.fflinkki(["l", "d", "d", "g"], "duckduckgo.com")
+        kl.fflinkki(["l", "i", "a", "s", "i", "p"],
+                    "https://fmovies.llc/tv/its-always-sunny-in-philadelphia-fmovies-39280")
 
         wkl := this.wkl
         wkl.hotifexpr := (*)=>(!!__k.ktblgen.winleader)
@@ -238,6 +228,14 @@ class gen {
         antiffkt := this.antiffkt
 
         wzkt := this.wzkt
+        wzkt.hotifexpr := (*)=>(WinActive("ahk_exe wezterm-gui.exe") and !!__k.ktblmisc.wezterm)
+        wzkt.hotki("XButton1", "{Ctrl Down}o{Ctrl Up}")
+        wzkt.dblki("XButton2", wintrans.tgui.inst.bmtoggle, 242, "{Ctrl Down}i{Ctrl Up}")
+        wzkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
+        wzkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
+        wzkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
+        wzkt.dblki("LAlt & RAlt", "{F13}", 200, "{Ctrl Down}[{Ctrl Up}")
+        wzkt.hotki("!CapsLock", "{F13}")
         antiwzkt := this.antiwzkt
 
         knto := this.knto
@@ -248,8 +246,6 @@ class gen {
         knto.hotki(";", wintrans.fade.bm.stepall.bind(true))
         knto.hotki("'", wintrans.fade.bm.stepall.bind(false))
         knto.hotki("!;", wintrans.fade.bm.setall.bind(255))
-
-        ; knto.hotki "AppsKey", (*)=>(winactivate(winwiz.winfromzoffset[2,,!!(GetKeyState("Shift", "P"))]))
 
         kt.hotki("AppsKey & /", this.knto.bm.toggle)
 
@@ -300,33 +296,6 @@ class gen {
 ;;     }
 ;; }
 
-class wez {
-    /**
-     * @prop {kitable} kt
-     */
-   static kt := {}
-        , kl := {}
-
-    static __new() {
-
-        kt := this.kt := kitable()
-        kt.hotifexpr := (*)=>(WinActive("ahk_exe wezterm-gui.exe") and !!__k.ktblmisc.wezterm)
-
-        kt.hotki("XButton1", "{Ctrl Down}o{Ctrl Up}")
-        kt.dblki("XButton2", wintrans.tgui.inst.bmtoggle, 242, "{Ctrl Down}i{Ctrl Up}")
-        kt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
-        kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        kt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        ; kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, this.wintitle, true, false))
-        ; kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, this.wintitle, true, false))
-        kt.dblki("LAlt & RAlt", "{Ctrl Down}[{Ctrl Up}:", 300, "{Ctrl Down}[{Ctrl Up}")
-        kt.hotki("*AppsKey", "{F13}")
-        kt.hotki("CapsLock & Tab", "{F13}")
-
-;        kl := this.kl := kileader(">^AppsKey",, false,,kt.hotifexpr)
-;        kl.hotki("RCtrl", winwiz.bm.loopwindows.bind(true, this.wintitle, false, false))
-    }
-}
 
 class on_main_start {
     static bm := {
@@ -338,9 +307,8 @@ class on_main_start {
         gen.kl.enabled := true
         gen.wkl.enabled := true
         gen.ffkt.enabled := true
+        gen.wzkt.enabled := true
         volctrl.wheel_enabled := true
-        wez.kt.enabled := true
-        wez.kl.enabled := true
 
         hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
         hotkey "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
@@ -349,6 +317,7 @@ class on_main_start {
         hotkey "sc029 & l", (*)=>ListLines()
         hotkey "sc029 & v", (*)=>ListVars()
         hotkey "sc029 & s", (*)=>Suspend()
+        hotkey "sc029 & w", (*)=>(dbgln({__o__:1,nestlvlmax:7},wincache["A"]))
         hotkey "sc029 & F1", quiktool.call.bind(
                 quiktool, A_Clipboard:=A_ComputerName, { x:A_ScreenWidth - 50
                                                      ,   y:A_ScreenHeight - 25 }, 6666 )
@@ -375,45 +344,3 @@ hotstring ":*?:cmpop", (*)=>send(sys.defpcs["optiplex"].fullname)
 hotstring ":*?:cmplp", (*)=>send(sys.defpcs["laptop"].fullname)
 hotif
 
-
-;;  class __s {
-
-;;  class __s {
-;;      static keys := Map()
-;;
-;;      static __new() {
-;;          this.keys["gen"] := kitable(unset,unset,true,2000)
-;;          this.keys["tst"] := kitable()
-;;          this.keys["fallout"] := kitable(unset, ((*)=>WinActive("ahk_exe falloutwHR.exe")))
-;;      }
-;;
-;;      static kgen => this.keys["gen"]
-;;      static ktst => this.keys["tst"]
-;;      static kfo  => this.keys["fallout"]
-;;  }
-;;
-;;
-;;  __s.kgen.hotki("LAlt & RCtrl", (*)=>Tooltip(A_TickCount))
-;;
-;;
-;;  __s.ktst.hotki("<^>^Up", (*)=>ToolTip("^^^"))
-;;  __s.ktst.hotki("<^>^Down", (*)=>ToolTip("vvv"))
-;;
-;;
-;;  __s.kfo.hotki("XButton1 & LButton", "{Shift Down}{LButton}{Shift Up}")
-;;  __s.kfo.hotki("XButton1 & RButton", "p")
-;;  __s.kfo.hotki("XButton1 & MButton", "{Tab}")
-;;
-;;  __s.kfo.hotki("XButton2 & LButton", "i")
-;;  __s.kfo.hotki("XButton2 & RButton", "{Escape}")
-;;  __s.kfo.hotki("XButton2 & MButton", "c")
-;;
-;;  __s.kfo.hotki("XButton1 & XButton2", "{Home}")
-;;  __s.kfo.hotki("XButton2 & XButton1", "s")
-;;
-;;
-;;  __s.kgen.enabled := true
-;;  __s.ktst.enabled := true
-;;  __s.kfo.enabled := true
-;;
-;;  Hotkey "LAlt & AppsKey", (*)=>(__s.kgen.enabled := true)

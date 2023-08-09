@@ -27,6 +27,7 @@ class anim {
       , loopdur := 0
       , loopindex := 0
       , loopdelay := 0
+
     __new() {
       this.bm := { loop : objbindmethod(this, "loop")
                  , call : objbindmethod(this, "call")
@@ -155,7 +156,7 @@ class anim {
             }
 
             startloop(*) {
-                this.startrect.set(this.win.rect)
+                this.startrect.set(this.win.rect).sub(this.win.frameboundsmarginrect)
                 ; SendMessage (WM_ENTERSIZEMOVE:=0x0231),,,, this.win.hwnd
                 super.startloop()
             }

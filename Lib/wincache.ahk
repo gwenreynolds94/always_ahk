@@ -113,6 +113,7 @@ class winwrapper {
     _last_updates_ := Map(
         "title", {mintk: 100, maxtk: 1000, pvtk: 0},
         "rect", {mintk: 0, maxtk: 1000, pvtk: 0},
+        "realrect", {mintk: 0, maxtk: 1000, pvtk: 0},
         "frameboundsmargincorners", {mintk: 100, maxtk: 100, pvtk: 0},
         "frameboundsmarginrect", {mintk: 100, maxtk: 100, pvtk: 0},
     )
@@ -256,10 +257,7 @@ class winwrapper {
         }
 
         syncpos(*) {
-            this.set(
-                winwiz.dll.getwindowrect(this.win.hwnd).rectified.sub(
-                     winwiz.dll.dwmgetwindowattribute.extendedframebounds(this.win.hwnd)*) 
-            )
+            this.set(winwiz.dll.getwindowrect(this.win.hwnd).rectified*)
         }
 
         updatepos(_uopts?, *) {

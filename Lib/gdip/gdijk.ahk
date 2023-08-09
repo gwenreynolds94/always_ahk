@@ -2638,10 +2638,14 @@ Gdip_SetCompositingMode(pGraphics, CompositingMode:=0)
 ;#####################################################################################
 
 class GdipCache {
+    static __New() {
+        Gdip_Startup()
+        OnExit Gdip_Shutdown.bind(GdipCache.pToken)
+    }
     static pToken := 0x0
 }
 
-Gdip_Startup(_force:=false)
+Gdip_Startup(_force:=false, *)
 {
     if !_force and (GdipCache.pToken != 0x0)
         return GdipCache.pToken
@@ -2658,7 +2662,7 @@ Gdip_Startup(_force:=false)
 	return _pToken
 }
 
-Gdip_Shutdown(_pToken)
+Gdip_Shutdown(_pToken, *)
 {
     if not GdipCache.pToken
         return 1
