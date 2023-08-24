@@ -20,6 +20,7 @@ setwindelay 0
 #Include <kitable>
 #Include <quiktip>
 #Include <volctrl>
+#Include <aktions>
 #Include <sys>
 
 
@@ -50,6 +51,7 @@ Class __always_config extends conf_tool {
     enabled => this.ini.enabled
     ktblgen => this.ini.ktblgen
     ktblmisc => this.ini.ktblapp
+    ktblapp => this.ini.ktblapp
 }
 
 __always_config.config_defaults := Map(
@@ -64,10 +66,14 @@ __always_config.config_defaults := Map(
         "wezterm"          , true ,
         "winmode"          , true ,
         "winleader"        , true ,
+        "debuglead"        , true ,
         "default"          , true ,
     ),
     "ktblapp", Map(
         "death_stranding" , true ,
+        "dying_light"     , true ,
+        "kenshi"          , true ,
+        "fallout"         , true ,
     ),
     "misc", Map(
         "fuck_cortana_interval", 6666,
@@ -126,9 +132,29 @@ class gen {
             */
          , knto:= kitable()
            /**
+            * @prop {kitable} dlkt
+            */
+         , dlkt:= kitable()
+           /**
+            * @prop {kitable} kshkt
+            */
+         , kshkt:= kitable()
+           /**
+            * @prop {kitable} dskt
+            */
+         , dskt:= kitable()
+           /**
+            * @prop {kitable} fokt
+            */
+         , fokt:= kitable()
+           /**
             * @prop {kileader} wkl
             */
          , wkl:= kileader("LAlt & Space")
+           /**
+            * @prop {kileader} dbgkl
+            */
+         , dbgkl:= kileader("sc029 & Space")
            /**
             * @prop {object} anims
             */
@@ -158,6 +184,11 @@ class gen {
         anim_top_full:=anims.top_full:=[anims.misc_anim.set(anims.btm_full*).sub(0,a_screenheight,0,0)*]
 
         kt := this.kt
+        kt.hotifexpr := (*)=>( !!__k.ktblgen.default and ;
+            !winactive("ahk_exe DyingLightGame.exe") and ;
+            !winactive("ahk_exe kenshi_x64.exe")     and ;
+            !winactive("ahk_exe ds.exe")             and ;
+            !winactive("ahk_exe FALLOUTW.exe")            )
 
         kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 244, "{XButton2}")
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
@@ -167,6 +198,7 @@ class gen {
         kt.dblki("XButton1", "{Ctrl Down}c{Ctrl Up}", 244, "{XButton1}")
         kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
+        kt.hotki("+RButton", "{Shift Down}{RButton}{Shift Up}")
 
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("<#f", wintrans.fade.bm.stepactive.bind(true))
@@ -183,32 +215,38 @@ class gen {
         hotkey "*AppsKey", kl.root.bm.enable
         hotif
 
-        kl.pathki(["t", "w", "e"], gen.wzkt.bm.toggle)
-        kl.pathki(["a", "h", "h"], winwiz.bm.searchv2docs.bind(0, 0))
-        kl.pathki(["a", "h", "+h"], winwiz.bm.searchv2docs.bind(0, 1))
-        kl.pathki(["a", "o", "t"], (*)=>(wincache["A"].alwaysontop := 1))
-        kl.pathki(["n", "o", "t"], (*)=>(wincache["A"].alwaysontop := 0))
-        kl.pathki(["k", "l", "l"], winwiz.bm.winkillclass.bind("", 2))
+        kl.pathki( ["t", "w", "e" ] ,                     gen.wzkt.bm.toggle )
+        kl.pathki( [ "a", "h", "h" ],      winwiz.bm.searchv2docs.bind(0, 0) )
+        kl.pathki( [ "a", "h", "+h"],      winwiz.bm.searchv2docs.bind(0, 1) )
+        kl.pathki( [ "a", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 1) )
+        kl.pathki( [ "n", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 0) )
+        kl.pathki( [ "k", "l", "l" ],     winwiz.bm.winkillclass.bind("", 2) )
 
-        kl.pathki(["o", "e", "n", "v"], sys.bm.launch_env_vars)
-        kl.pathki(["o", "e", "n", "p"], sys.bm.launch_env_path)
+        kl.pathki( [ "o", "e", "n", "v" ], sys.bm.launch_env_vars )
+        kl.pathki( [ "o", "e", "n", "p" ], sys.bm.launch_env_path )
 
-        kl.progki(["o", "w", "e"], "wezterm-gui.exe")
-        kl.progki(["o", "f", "f"], "firefox.exe")
-        kl.progki(["o", "l", "s"], "Logseq.exe")
-        kl.progki(["o", "i", "t"], "iTunes.exe")
+        kl.progki( [ "o", "w", "e" ], "wezterm-gui.exe" )
+        kl.progki( [ "o", "f", "f" ], "firefox.exe"     )
+        kl.progki( [ "o", "l", "s" ], "Logseq.exe"      )
+        kl.progki( [ "o", "i", "t" ], "iTunes.exe"      )
+        kl.progki( [ "o", "f", "a", "l", "l" ]
+                 , "`"Z:\SteamLibrary\steamapps\common\Fallout\Fallout Fixt\Play Fallout Fixt.lnk`"" )
 
-        kl.progki(["o", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe On"))
-        kl.progki(["k", "b", "c", "b"], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off"))
+        kl.progki( [ "o", "b", "c", "b" ], (A_ScriptDir "\Apps\BCV2\BCV2.exe On")  )
+        kl.progki( [ "k", "b", "c", "b" ], (A_ScriptDir "\Apps\BCV2\BCV2.exe Off") )
 
-        kl.fflinkki(["l", "p", "a", "y"], "paypal.com")
-        kl.fflinkki(["l", "t", "x", "t"], "textnow.com")
-        kl.fflinkki(["l", "y", "o", "u"], "youtube.com")
-        kl.fflinkki(["l", "a", "n", "i"], "aniwave.to")
-        kl.fflinkki(["l", "f", "m", "v"], "fmovies.llc")
-        kl.fflinkki(["l", "d", "d", "g"], "duckduckgo.com")
-        kl.fflinkki(["l", "i", "a", "s", "i", "p"],
-                    "https://fmovies.llc/tv/its-always-sunny-in-philadelphia-fmovies-39280")
+        kl.fflinkki( [ "l", "p", "a", "y" ]      , "paypal.com")
+        kl.fflinkki( [ "l", "t", "x", "t" ]      , "textnow.com")
+        kl.fflinkki( [ "l", "y", "o", "u" ]      , "youtube.com")
+        kl.fflinkki( [ "l", "a", "n", "i" ]      , "aniwave.to")
+        kl.fflinkki( [ "l", "f", "m", "v" ]      , "fmovies.llc")
+        kl.fflinkki( [ "l", "d", "d", "g" ]      , "duckduckgo.com")
+        kl.fflinkki( [ "l", "z", "e", "n" ]      , "zenni.com")
+        kl.fflinkki( [ "l", "h", "u", "m" ]      , "humblebundle.com")
+        kl.fflinkki( [ "l", "g", "m", "l" ]      , "gmail.com")
+        kl.fflinkki( [ "l", "h", "u", "l", "u" ] , "hulu.com")
+        kl.fflinkki( [ "l", "i", "a", "s", "i",  "p" ]
+                   , "https://fmovies.llc/tv/its-always-sunny-in-philadelphia-fmovies-39280")
 
         wkl := this.wkl
         wkl.hotifexpr := (*)=>(!!__k.ktblgen.winleader)
@@ -222,8 +260,8 @@ class gen {
 
         ffkt := this.ffkt
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
-        ffkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}")
-        ffkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}")
+        ffkt.hotki( "XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}" )
+        ffkt.hotki( "XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}" )
 
         antiffkt := this.antiffkt
 
@@ -232,7 +270,6 @@ class gen {
         wzkt.hotki("XButton1", "{Ctrl Down}o{Ctrl Up}")
         wzkt.dblki("XButton2", wintrans.tgui.inst.bmtoggle, 242, "{Ctrl Down}i{Ctrl Up}")
         wzkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
-        wzkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
         wzkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
         wzkt.dblki("LAlt & RAlt", "{F13}", 200, "{Ctrl Down}[{Ctrl Up}")
         wzkt.hotki("!CapsLock", "{F13}")
@@ -249,12 +286,145 @@ class gen {
 
         kt.hotki("AppsKey & /", this.knto.bm.toggle)
 
+        kshkt := this.kshkt
+        kshkt.hotifexpr := (*)=>( !!winactive("ahk_exe kenshi_x64.exe") and !!__k.ktblapp.kenshi )
+        kshkt.hotki "XButton2", "m"
+        kshkt.hotki "XButton2 & LButton", "b"
+        kshkt.hotki "XButton1", "{Space}"
+        kshkt.hotki "XButton1 & LButton", "i"
+        kshkt.hotki "XButton1 & RButton", "{LShift Down}{RButton}{LShift Up}"
+        kshkt.hotki "XButton1 & WheelUp", gen.kenshi.bm.incrgamespeed
+        kshkt.hotki "XButton1 & WheelDown", gen.kenshi.bm.decrgamespeed
+        kshkt.hotki "XButton2 & WheelUp", gen.kenshi.bm.incrcharselect
+        kshkt.hotki "XButton2 & WheelDown", gen.kenshi.bm.decrcharselect
+        kshkt.hotki "LShift & Space", gen.kenshi.bm.cyclegamespeed
+
+        dskt := this.dskt
+        dskt.hotifexpr := (*)=>( !!winactive("ahk_exe ds.exe") and !!__k.ktblapp.death_stranding )
+        dskt.hotki "XButton1 & XButton2", aktions.togglepress("w").toggle
+        dskt.hotki "XButton2", aktions.holdpress("v").press
+        dskt.hotki "XButton1", aktions.holdpress("Space").press
+        dskt.hotki "XButton1 & LButton", aktions.holdpress("c").press
+        dskt.hotki "XButton1 & RButton", aktions.holdpress("LShift").press
+        dskt.hotki "XButton2 & RButton", aktions.holdpress("Escape").press
+        dskt.hotki "+5", aktions.repeatpress("5", 30, 15).toggle
+
+        fokt := this.fokt
+        fokt.hotifexpr := (*)=>( !!winactive("ahk_exe FALLOUTW.exe") and !!__k.ktblapp.fallout )
+        fokt.hotki "XButton2 & RButton", "{Escape}"
+        fokt.hotki "XButton1 & XButton2", "a"
+
+        dbgkl := this.dbgkl
+        dbgkl.hotifexpr := (*)=>( !!__k.ktblgen.debuglead )
+        dbgkl.pathki( ["h", "w", "n", "d"], (*)=>(msgbox(a_clipboard:=winexist("a"))) )
+        dbgkl.pathki( ["c", "l", "s"], (*)=>(msgbox(a_clipboard:=wingetclass(winexist("a")))) )
+        dbgkl.pathki( ["e", "x", "e"], (*)=>(msgbox(a_clipboard:=wingetprocessname(winexist("a")))) )
+        dbgkl.pathki( ["t", "t", "l"], (*)=>(msgbox(a_clipboard:=wingettitle(winexist("a")))) )
+
+        dlkt := this.dlkt
+        dlkt.hotifexpr := (*)=>( !!winactive("ahk_exe DyingLightGame.exe") and !!__k.ktblapp.dying_light )
+        dlkt.hotki("XButton1 & RButton", gen.dyinglight.bm.togglerapidx1)
+
         coordmode "tooltip", "screen"
+    }
+
+    class deathstranding {
+       static bm := { toggleautowalk : objbindmethod(this, "toggleautowalk") }
+            , isautowalking := false
+        static toggleautowalk(*) {
+            if !!this.isautowalking
+                send("{w Up}"), this.isautowalking := false
+            else send("{w Down}"), this.isautowalking := true
+        }
+    }
+
+    class dyinglight {
+       static bm := { togglerapidx1 : objbindmethod(this, "togglerapidx1") ;
+                    , looprapidx1   : objbindmethod(this,   "looprapidx1") ;
+                    , startrapidx1  : objbindmethod(this,  "startrapidx1") ;
+                    , stoprapidx1   : objbindmethod(this,   "stoprapidx1") }
+            , rapidx1_enabled := false
+            , rapidx1_interval := 50
+        static looprapidx1(*) {
+            send "{XButton1}"
+        }
+        static startrapidx1(*) {
+            if !!this.rapidx1_enabled
+                return
+            this.rapidx1_enabled := true
+            settimer(this.bm.looprapidx1, this.rapidx1_interval.abs())
+        }
+        static stoprapidx1(*) {
+            if !this.rapidx1_enabled
+                return
+            this.rapidx1_enabled := false
+            settimer(this.bm.looprapidx1, 0)
+        }
+        static togglerapidx1(*) {
+            if !!this.rapidx1_enabled
+                this.stoprapidx1
+            else this.startrapidx1()
+            quiktool(!!this.rapidx1_enabled, {x: A_ScreenWidth / 2, y: A_ScreenHeight / 2})
+        }
+    }
+
+    class kenshi {
+       static bm := { cyclegamespeed  : objbindmethod( this,  "cyclegamespeed" ) ;
+                    , incrgamespeed   : objbindmethod( this,   "incrgamespeed" ) ;
+                    , decrgamespeed   : objbindmethod( this,   "decrgamespeed" ) ;
+                    , cyclecharselect : objbindmethod( this, "cyclecharselect" ) ;
+                    , incrcharselect  : objbindmethod( this,  "incrcharselect" ) ;
+                    , decrcharselect  : objbindmethod( this,  "decrcharselect" ) }
+            , gamespeeds := [ "Space", "F2", "F3", "F4" ]
+            , gamespeed := 0
+            , gamespeedreset := 1000
+            , gamespeedprev := 0
+            , charselect := 0
+            , charcount := 6
+            , charselectprev := 0
+            , charselectreset := 1000
+            , charselectcycle := true
+        static cyclecharselect(*) {
+            csprev := this.charselectprev
+            cscurr := A_TickCount
+            if ((cscurr - csprev) > this.charselectreset) or (++this.charselect > this.charcount)
+                this.charselect := 1
+            send this.charselect
+            this.charselectprev := cscurr
+        }
+        static incrcharselect(*) {
+            if ++this.charselect > this.charcount
+                this.charselect := this.charselectcycle ? 1 : this.charcount
+            send this.charselect
+        }
+        static decrcharselect(*) {
+            if --this.charselect < 1
+                this.charselect := this.charselectcycle ? this.charcount : 1
+            send this.charselect
+        }
+        static cyclegamespeed(*) {
+            gsprev := this.gamespeedprev
+            gscurr := A_TickCount
+            if ((gscurr - gsprev) > this.gamespeedreset) or (++this.gamespeed > this.gamespeeds.length)
+                    this.gamespeed := 1
+            send "{" this.gamespeeds[this.gamespeed] "}"
+            this.gamespeedprev := gscurr
+        }
+        static incrgamespeed(*) {
+            if ++this.gamespeed > this.gamespeeds.length
+                this.gamespeed := this.gamespeeds.length
+            send "{" this.gamespeeds[this.gamespeed] "}"
+        }
+        static decrgamespeed(*) {
+            if --this.gamespeed < 1
+                this.gamespeed := 1
+            send "{" this.gamespeeds[this.gamespeed] "}"
+        }
     }
 }
 
 ;; class dskt extends kitable {
-;; 
+;;
 ;;     /**
 ;;      * @prop {dskt} instance
 ;;      */
@@ -265,13 +435,13 @@ class gen {
 ;;         , _holding_left := false
 ;;         , _holding_right := false
 ;;         , instance := this()
-;; 
+;;
 ;;     static toggle_forward(*) {
 ;;         if (this._moving_forward:=!this._moving_forward)
 ;;             send "{w Down}"
 ;;         else send("{w Up}")
 ;;     }
-;; 
+;;
 ;;     static toggle_leftrighthold(*) {
 ;;         if not (this._holding_left and this._holding_right) {
 ;;             this._holding_left := this._holding_right := true
@@ -281,7 +451,7 @@ class gen {
 ;;             ; ...
 ;;         }
 ;;     }
-;; 
+;;
 ;;     __new() {
 ;;         super.__new()
 ;;         this.hotifexpr := (*)=>(!!winactive("ahk_exe ds.exe") and !!__k.ktblmisc.death_stranding)
@@ -308,6 +478,11 @@ class on_main_start {
         gen.wkl.enabled := true
         gen.ffkt.enabled := true
         gen.wzkt.enabled := true
+        gen.dlkt.enabled := true
+        gen.dskt.enabled := true
+        gen.kshkt.enabled := true
+        gen.fokt.enabled := true
+        gen.dbgkl.enabled := true
         volctrl.wheel_enabled := true
 
         hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
@@ -316,6 +491,7 @@ class on_main_start {
         hotkey "sc029 & h", (*)=>ListHotkeys()
         hotkey "sc029 & l", (*)=>ListLines()
         hotkey "sc029 & v", (*)=>ListVars()
+        hotkey "sc029 & k", (*)=>KeyHistory()
         hotkey "sc029 & s", (*)=>Suspend()
         hotkey "sc029 & w", (*)=>(dbgln({__o__:1,nestlvlmax:7},wincache["A"]))
         hotkey "sc029 & F1", quiktool.call.bind(

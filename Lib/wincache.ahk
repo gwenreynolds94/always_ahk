@@ -114,8 +114,8 @@ class winwrapper {
         "title", {mintk: 100, maxtk: 1000, pvtk: 0},
         "rect", {mintk: 0, maxtk: 1000, pvtk: 0},
         "realrect", {mintk: 0, maxtk: 1000, pvtk: 0},
-        "frameboundsmargincorners", {mintk: 100, maxtk: 100, pvtk: 0},
-        "frameboundsmarginrect", {mintk: 100, maxtk: 100, pvtk: 0},
+        "frameboundsmargincorners", {mintk: 0, maxtk: 1000, pvtk: 0},
+        "frameboundsmarginrect", {mintk: 0, maxtk: 1000, pvtk: 0},
     )
 
     __new(_window_title:="") {

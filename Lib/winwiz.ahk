@@ -243,17 +243,15 @@ class winwiz {
     }
 
     static swap(_wtitle1, _wtitle2) {
-        static SWP := winwiz.dll.setwindowpos.SWP
+        static SWP := winwiz.dll.setwindowpos.SWP, rect1 := vector4.Rect(), rect2 := vector4.Rect()
         hwnd1 := winexist(_wtitle1)
         hwnd2 := winexist(_wtitle2)
         w1 := wincache[hwnd1]
         w2 := wincache[hwnd2]
-        vr1 := w1.realrect
-        vr2 := w2.realrect
-        w1.rect.set(vr2*)
-        w2.rect.set(vr1*)
-        w1.rect[true].updatepos(SWP.FRAMECHANGED|SWP.SHOWWINDOW)
-        w2.rect[true].updatepos(SWP.FRAMECHANGED|SWP.SHOWWINDOW)
+        rect1.set(w1.rect*).sub(w1.frameboundsmarginrect*)
+        rect2.set(w2.rect*).sub(w2.frameboundsmarginrect*)
+        w1.rect[true].setpos(rect2*)
+        w2.rect[true].setpos(rect1*)
     }
 
     static swaponpress(_key:="LButton") {
