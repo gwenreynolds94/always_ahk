@@ -13,7 +13,7 @@
 
 class wintrans {
     static default_steps := [
-        75, 150, 215, 235, 245, 255
+        75, 150, 200, 235, 255
     ]
     , steps := this.default_steps
     , bm := {
@@ -29,10 +29,15 @@ class wintrans {
     static newstep(_trans, *) {
         _trans := Integer(_trans).Min(255).Max(0)
         nearestindex := this.default_steps.IndexOf(_trans.Nearest(this.default_steps*))
-        if !nearestindex or (_trans = this.default_steps[nearestindex])
+        if !nearestindex or !!(_trans = this.default_steps[nearestindex])
             return
-        this.default_steps.InsertAt(
-            nearestindex - !(this.default_steps[nearestindex] > _trans), _trans )
+        newindex := 0
+        for _step in this.default_steps
+            if _step > _trans {
+                newindex := A_Index
+                break
+            }
+        this.default_steps.InsertAt( newindex, _trans )
     }
 
     static removestep(_trans, *) {

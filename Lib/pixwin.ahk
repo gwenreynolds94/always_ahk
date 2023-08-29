@@ -41,6 +41,7 @@ class pixwin extends gui {
     }
 
     _first_show_(*) {
+        super.show("NA")
         this.bitmap := Gdip_BitmapFromHWND(this.win.hwnd)
         Gdip_GetImageDimensions(this.bitmap, &_bmw, &_bmh)
         this.bitmap_size.set(_bmw, _bmh)

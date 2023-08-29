@@ -157,7 +157,7 @@ class winwrapper {
     exe => (this.hwnd and this._exe) or (this._exe:=wingetprocessname(this.hwnd))
     class => (this.hwnd and this._class) or (this._class:=wingetclass(this.hwnd))
     title {
-        get { 
+        get {
             if this._should_update_("title", true)
                 this._title := wingettitle(this.hwnd)
             return this._title
@@ -190,7 +190,7 @@ class winwrapper {
     frameboundsmarginrect[_return_previous:=false] {
         get {
             if !this._frameboundsmarginrect
-                this._frameboundsmarginrect := 
+                this._frameboundsmarginrect :=
                     winwiz.dll.setwindowpos.extframeboundsmargin(this.hwnd)
             else if this._should_update_("frameboundsmarginrect", _return_previous)
                 this._frameboundsmarginrect.set(
@@ -201,7 +201,7 @@ class winwrapper {
     frameboundsmargincorners[_return_previous:=false] {
         get {
             if !this._frameboundsmargincorners
-                this._frameboundsmargincorners := 
+                this._frameboundsmargincorners :=
                     winwiz.dll.dwmgetwindowattribute.extendedframeboundsoffset(this.hwnd)
             else if this._should_update_("frameboundsmargincorners", _return_previous)
                 this._frameboundsmargincorners.set(
@@ -217,13 +217,13 @@ class winwrapper {
         get => _return_previous ? this._transparency : (this._transparency := (wingettransparent(this.hwnd) or 255))
         set => winsettransparent(this._transparency:=integer(value).min(255).max(0), this.hwnd)
     }
-    transanim[_return_previous:=true] => (_return_previous and this._transanim) ? 
-                                                              (this._transanim) : 
+    transanim[_return_previous:=true] => (_return_previous and this._transanim) ?
+                                                              (this._transanim) :
                                   (this._transanim := anim.win.trans(this.hwnd) )
     updatepos(*) {
         winwiz.dll.setwindowpos(this.hwnd,, this.rect.add(this.win.frameboundsmarginrect*)*)
     }
-    
+
     class winrect extends vector4.rect {
         win := {},
         tmprect := Vector4.Rect()
@@ -245,7 +245,7 @@ class winwrapper {
                 this.w := %nt%(_w), this.h := %nt%(_h)
             tmprect.set(this*).add(this.win.frameboundsmarginrect[true]*)
             winwiz.dll.setwindowpos(this.win.hwnd,,
-                                    hasxy ? tmprect.x : unset, 
+                                    hasxy ? tmprect.x : unset,
                                     hasxy ? tmprect.y : unset,
                                     haswh ? tmprect.w : unset,
                                     haswh ? tmprect.h : unset, _uopts?)

@@ -67,6 +67,7 @@ __always_config.config_defaults := Map(
         "winmode"          , true ,
         "winleader"        , true ,
         "debuglead"        , true ,
+        "debugtbl"         , true ,
         "default"          , true ,
     ),
     "ktblapp", Map(
@@ -156,6 +157,10 @@ class gen {
             */
          , dbgkl:= kileader("sc029 & Space")
            /**
+            * @prop {kitable} dbgkt
+            */
+         , dbgkt:= kitable()
+           /**
             * @prop {object} anims
             */
          , anims:= {         _:0
@@ -188,7 +193,7 @@ class gen {
             !winactive("ahk_exe DyingLightGame.exe") and ;
             !winactive("ahk_exe kenshi_x64.exe")     and ;
             !winactive("ahk_exe ds.exe")             and ;
-            !winactive("ahk_exe FALLOUTW.exe")            )
+            !winactive("ahk_exe FALLOUTW.exe")           )
 
         kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 244, "{XButton2}")
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
@@ -199,6 +204,7 @@ class gen {
         kt.hotki("XButton1 & LButton", "{Ctrl Down}v{Ctrl Up}")
         kt.hotki("XButton1 & RButton", "{Ctrl Down}x{Ctrl Up}")
         kt.hotki("+RButton", "{Shift Down}{RButton}{Shift Up}")
+        kt.hotki("AppsKey", "{AppsKey}")
 
         kt.hotki("#LButton", winwiz.swaponpress.bind("LButton"))
         kt.hotki("<#f", wintrans.fade.bm.stepactive.bind(true))
@@ -211,16 +217,14 @@ class gen {
 
         kl := this.kl
         kl.hotifexpr := (*)=>( !!__k.ktblgen.leadercaps)
-        hotif gen.kl.bm.isenabled
-        hotkey "*AppsKey", kl.root.bm.enable
-        hotif
 
-        kl.pathki( ["t", "w", "e" ] ,                     gen.wzkt.bm.toggle )
+        kl.pathki( [ "t", "w", "e" ],                     gen.wzkt.bm.toggle )
         kl.pathki( [ "a", "h", "h" ],      winwiz.bm.searchv2docs.bind(0, 0) )
         kl.pathki( [ "a", "h", "+h"],      winwiz.bm.searchv2docs.bind(0, 1) )
         kl.pathki( [ "a", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 1) )
         kl.pathki( [ "n", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 0) )
         kl.pathki( [ "k", "l", "l" ],     winwiz.bm.winkillclass.bind("", 2) )
+        kl.hotki "k & CapsLock", (*)=>(WinKill("A"))
 
         kl.pathki( [ "o", "e", "n", "v" ], sys.bm.launch_env_vars )
         kl.pathki( [ "o", "e", "n", "p" ], sys.bm.launch_env_path )
@@ -229,6 +233,7 @@ class gen {
         kl.progki( [ "o", "f", "f" ], "firefox.exe"     )
         kl.progki( [ "o", "l", "s" ], "Logseq.exe"      )
         kl.progki( [ "o", "i", "t" ], "iTunes.exe"      )
+        kl.progki( [ "o", "p", "t", "o", "y" ], "C:\Program Files\PowerToys\PowerToys.exe" )
         kl.progki( [ "o", "f", "a", "l", "l" ]
                  , "`"Z:\SteamLibrary\steamapps\common\Fallout\Fallout Fixt\Play Fallout Fixt.lnk`"" )
 
@@ -250,18 +255,20 @@ class gen {
 
         wkl := this.wkl
         wkl.hotifexpr := (*)=>(!!__k.ktblgen.winleader)
-        wkl.pathki( [ "Space" , "AppsKey" ], anims.slide.bm.call.bind(anims.full     ) )
-        wkl.pathki( [ "Space" , "." ], anims.slide.bm.call.bind(anims.btm_full       ) )
-        wkl.pathki( [ "Space" , "," ], anims.slide.bm.call.bind(anims.btm_half_left  ) )
-        wkl.pathki( [ "Space" , ";" ], anims.slide.bm.call.bind(anims.top_full       ) )
-        wkl.pathki( [ "Space" , "/" ], anims.slide.bm.call.bind(anims.btm_half_right ) )
-        wkl.pathki( [ "Space" , "l" ], anims.slide.bm.call.bind(anims.top_half_left  ) )
-        wkl.pathki( [ "Space" , "'" ], anims.slide.bm.call.bind(anims.top_half_right ) )
+        wkl.hotki( "Space & AppsKey", anims.slide.bm.call.bind(anims.full           ) )
+        wkl.hotki( "Space & ."      , anims.slide.bm.call.bind(anims.btm_full       ) )
+        wkl.hotki( "Space & ,"      , anims.slide.bm.call.bind(anims.btm_half_left  ) )
+        wkl.hotki( "Space & `;"     , anims.slide.bm.call.bind(anims.top_full       ) )
+        wkl.hotki( "Space & /"      , anims.slide.bm.call.bind(anims.btm_half_right ) )
+        wkl.hotki( "Space & l"      , anims.slide.bm.call.bind(anims.top_half_left  ) )
+        wkl.hotki( "Space & '"      , anims.slide.bm.call.bind(anims.top_half_right ) )
+        wkl.hotki( "Space & LAlt"   , wkl.root.bm.toggle                              )
 
         ffkt := this.ffkt
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
         ffkt.hotki( "XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}" )
         ffkt.hotki( "XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}" )
+        ffkt.hotki "^!LButton", aktions.repeatpress("LButton", 50, 30).toggle
 
         antiffkt := this.antiffkt
 
@@ -272,19 +279,23 @@ class gen {
         wzkt.hotki("XButton1 & XButton2", "{Ctrl Down}{PgDn}{Ctrl Up}")
         wzkt.hotki("XButton2 & XButton1", "{Ctrl Down}{PgUp}{Ctrl Up}")
         wzkt.dblki("LAlt & RAlt", "{F13}", 200, "{Ctrl Down}[{Ctrl Up}")
+        wzkt.hotki("LWin & LAlt", "{Ctrl Down}{[}{Ctrl Up}")
         wzkt.hotki("!CapsLock", "{F13}")
         antiwzkt := this.antiwzkt
 
         knto := this.knto
         knto.hotifexpr := (*)=>(!!__k.ktblgen.winmode)
 
-        knto.hotki(",", winwiz.bm.loopwindows.bind(0,"",0,0))
-        knto.hotki(".", winwiz.bm.loopwindows.bind(1,"",0,0))
-        knto.hotki(";", wintrans.fade.bm.stepall.bind(true))
-        knto.hotki("'", wintrans.fade.bm.stepall.bind(false))
-        knto.hotki("!;", wintrans.fade.bm.setall.bind(255))
+        knto.hotki("q", winwiz.bm.loopwindows.bind(0,"",0,0))
+        knto.hotki("e", winwiz.bm.loopwindows.bind(1,"",0,0))
+        knto.hotki("w", wintrans.fade.bm.stepall.bind(true))
+        knto.hotki("s", wintrans.fade.bm.stepall.bind(false))
+        knto.hotki("r", wintrans.fade.bm.setall.bind(255))
+        knto.hotki("Escape", (*)=>(this.knto.enabled := false))
+        knto.hotki("Backspace", (*)=>(this.knto.enabled := false))
+        knto.hotki("Delete", (*)=>(this.knto.enabled := false))
 
-        kt.hotki("AppsKey & /", this.knto.bm.toggle)
+        kt.hotki("sc029 & 1", this.knto.bm.toggle)
 
         kshkt := this.kshkt
         kshkt.hotifexpr := (*)=>( !!winactive("ahk_exe kenshi_x64.exe") and !!__k.ktblapp.kenshi )
@@ -316,10 +327,32 @@ class gen {
 
         dbgkl := this.dbgkl
         dbgkl.hotifexpr := (*)=>( !!__k.ktblgen.debuglead )
-        dbgkl.pathki( ["h", "w", "n", "d"], (*)=>(msgbox(a_clipboard:=winexist("a"))) )
-        dbgkl.pathki( ["c", "l", "s"], (*)=>(msgbox(a_clipboard:=wingetclass(winexist("a")))) )
-        dbgkl.pathki( ["e", "x", "e"], (*)=>(msgbox(a_clipboard:=wingetprocessname(winexist("a")))) )
-        dbgkl.pathki( ["t", "t", "l"], (*)=>(msgbox(a_clipboard:=wingettitle(winexist("a")))) )
+        dbgkl.pathki([ "h", "w", "n", "d" ], (*)=>(msgbox(a_clipboard:=winexist("a"))))
+        dbgkl.pathki([ "c", "l", "s" ], (*)=>(msgbox(a_clipboard:=wingetclass(winexist("a")))))
+        dbgkl.pathki([ "e", "x", "e" ], (*)=>(msgbox(a_clipboard:=wingetprocessname(winexist("a")))))
+        dbgkl.pathki([ "t", "t", "l" ], (*)=>(msgbox(a_clipboard:=wingettitle(winexist("a")))))
+        dbgkl.pathki([ "a", "c", "t" ], (*)=>(dbgln({__o__:1,nestlvlmax:7},wincache["A"])))
+        dbgkl.pathki([ "d", "e", "s", "k" ], quiktool.call.bind( quiktool                  ;
+                                                         , A_Clipboard:=A_ComputerName
+                                                         , { x : A_ScreenWidth - 50  ;
+                                                           , y : A_ScreenHeight - 25 }
+                                                         , 6666                      ))
+
+        dbgkt := this.dbgkt
+        dbgkt.hotifexpr := (*)=>( !!__k.ktblgen.debugtbl )
+        dbgkt.hotki "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
+        dbgkt.hotki "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
+        dbgkt.hotki "sc029 & q", (*)=>exitapp()
+        dbgkt.hotki "sc029 & h", (*)=>ListHotkeys()
+        dbgkt.hotki "sc029 & l", (*)=>ListLines()
+        dbgkt.hotki "sc029 & v", (*)=>ListVars()
+        dbgkt.hotki "sc029 & k", (*)=>KeyHistory()
+        dbgkt.hotki "sc029 & s", (*)=>Suspend()
+        dbgkt.hotki "sc029 & F1", __k.edit_ktblgen_gui.bm.toggle
+        dbgkt.hotki "sc029 & F2", __k.edit_ktblapp_gui.bm.toggle
+        dbgkt.hotki "sc029 & F3", __k.edit_misc_gui.bm.toggle
+        dbgkt.hotki "$sc029", (*)=>(send("{sc029}"))
+        dbgkt.hotki "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
 
         dlkt := this.dlkt
         dlkt.hotifexpr := (*)=>( !!winactive("ahk_exe DyingLightGame.exe") and !!__k.ktblapp.dying_light )
@@ -482,6 +515,7 @@ class on_main_start {
         gen.dskt.enabled := true
         gen.kshkt.enabled := true
         gen.fokt.enabled := true
+        gen.dbgkt.enabled := true
         gen.dbgkl.enabled := true
         volctrl.wheel_enabled := true
 
