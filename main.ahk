@@ -161,6 +161,10 @@ class gen {
             */
          , dbgkt:= kitable()
            /**
+            * @prop {kitable} scrkt
+            */
+         , scrkt:= kitable()
+           /**
             * @prop {object} anims
             */
          , anims:= {         _:0
@@ -224,6 +228,9 @@ class gen {
         kl.pathki( [ "a", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 1) )
         kl.pathki( [ "n", "o", "t" ],  (*)=>(wincache["A"].alwaysontop := 0) )
         kl.pathki( [ "k", "l", "l" ],     winwiz.bm.winkillclass.bind("", 2) )
+        kl.pathki( [ "m", "n" ], "{Media_Prev}" )
+        kl.pathki( [ "m", "m" ], "{Media_Play_Pause}" )
+        kl.pathki( [ "m", "," ], "{Media_Next}" )
         kl.hotki "k & CapsLock", (*)=>(WinKill("A"))
 
         kl.pathki( [ "o", "e", "n", "v" ], sys.bm.launch_env_vars )
@@ -255,14 +262,27 @@ class gen {
 
         wkl := this.wkl
         wkl.hotifexpr := (*)=>(!!__k.ktblgen.winleader)
-        wkl.hotki( "Space & AppsKey", anims.slide.bm.call.bind(anims.full           ) )
-        wkl.hotki( "Space & ."      , anims.slide.bm.call.bind(anims.btm_full       ) )
-        wkl.hotki( "Space & ,"      , anims.slide.bm.call.bind(anims.btm_half_left  ) )
-        wkl.hotki( "Space & `;"     , anims.slide.bm.call.bind(anims.top_full       ) )
-        wkl.hotki( "Space & /"      , anims.slide.bm.call.bind(anims.btm_half_right ) )
-        wkl.hotki( "Space & l"      , anims.slide.bm.call.bind(anims.top_half_left  ) )
-        wkl.hotki( "Space & '"      , anims.slide.bm.call.bind(anims.top_half_right ) )
-        wkl.hotki( "Space & LAlt"   , wkl.root.bm.toggle                              )
+        wkl.pathki( [".", "."], anims.slide.bm.call.bind(anim.win.rect.presets[1].full  ) )
+        wkl.pathki( [".", ","], anims.slide.bm.call.bind(anim.win.rect.presets[1].bot   ) )
+        wkl.pathki( [".", "/"], anims.slide.bm.call.bind(anim.win.rect.presets[1].top   ) )
+        wkl.pathki( [",", ","], anims.slide.bm.call.bind(anim.win.rect.presets[1].left  ) )
+        wkl.pathki( ["/", "/"], anims.slide.bm.call.bind(anim.win.rect.presets[1].right ) )
+        wkl.pathki( [",", ";"], anims.slide.bm.call.bind(anim.win.rect.presets[1].lefttop ) )
+        wkl.pathki( [",", "."], anims.slide.bm.call.bind(anim.win.rect.presets[1].leftbot ) )
+        wkl.pathki( ["/", ";"], anims.slide.bm.call.bind(anim.win.rect.presets[1].righttop ) )
+        wkl.pathki( ["/", "."], anims.slide.bm.call.bind(anim.win.rect.presets[1].rightbot ) )
+        if sys.mon.count > 1 {
+            wkl.pathki( [";", ";"], anims.slide.bm.call.bind(anim.win.rect.presets[2].full  ) )
+            wkl.pathki( [";", "l"], anims.slide.bm.call.bind(anim.win.rect.presets[2].bot   ) )
+            wkl.pathki( [";", "'"], anims.slide.bm.call.bind(anim.win.rect.presets[2].top   ) )
+            wkl.pathki( ["l", "l"], anims.slide.bm.call.bind(anim.win.rect.presets[2].left  ) )
+            wkl.pathki( ["'", "'"], anims.slide.bm.call.bind(anim.win.rect.presets[2].right ) )
+            wkl.pathki( ["l", ";"], anims.slide.bm.call.bind(anim.win.rect.presets[2].lefttop ) )
+            wkl.pathki( ["l", "."], anims.slide.bm.call.bind(anim.win.rect.presets[2].leftbot ) )
+            wkl.pathki( ["'", ";"], anims.slide.bm.call.bind(anim.win.rect.presets[2].righttop ) )
+            wkl.pathki( ["'", "."], anims.slide.bm.call.bind(anim.win.rect.presets[2].rightbot ) )
+        }
+        wkl.hotki( "Space & LAlt"   , wkl.root.bm.toggle )
 
         ffkt := this.ffkt
         ffkt.hotifexpr := (*)=>(WinActive("ahk_exe firefox.exe") and !!__k.ktblgen.firefox)
@@ -281,6 +301,8 @@ class gen {
         wzkt.dblki("LAlt & RAlt", "{F13}", 200, "{Ctrl Down}[{Ctrl Up}")
         wzkt.hotki("LWin & LAlt", "{Ctrl Down}{[}{Ctrl Up}")
         wzkt.hotki("!CapsLock", "{F13}")
+        wzkt.hotki("F11", (*)=>(_wlist:=wingetlist("ahk_exe wezterm-gui.exe"), (_wlist.length >= 2) and winactivate(_wlist[2])))
+        wzkt.hotki("F12", (*)=>(_wlist:=wingetlist("ahk_exe wezterm-gui.exe"), (_wlist.length >= 2) and winactivate(_wlist[_wlist.Length])))
         antiwzkt := this.antiwzkt
 
         knto := this.knto
@@ -296,6 +318,15 @@ class gen {
         knto.hotki("Delete", (*)=>(this.knto.enabled := false))
 
         kt.hotki("sc029 & 1", this.knto.bm.toggle)
+
+        scrkt := this.scrkt
+        scrkt.hotki "q", (*)=>( !!(ffhwnd:=winexist("ahk_exe firefox.exe"))
+                                ? ControlClick(,ffhwnd,,"WD",1)
+                                : false )
+        scrkt.hotki "e", (*)=>( !!(ffhwnd:=winexist("ahk_exe firefox.exe"))
+                                ? ControlClick(,ffhwnd,,"WU",1)
+                                : false )
+        kt.hotki("sc029 & 2", this.scrkt.bm.toggle)
 
         kshkt := this.kshkt
         kshkt.hotifexpr := (*)=>( !!winactive("ahk_exe kenshi_x64.exe") and !!__k.ktblapp.kenshi )

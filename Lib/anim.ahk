@@ -6,6 +6,7 @@
 
 #include wincache.ahk
 #Include builtins_extended.ahk
+#Include sys.ahk
 
 class anim {
         progress := 0
@@ -144,6 +145,37 @@ class anim {
         }
 
         class rect extends anim.win {
+            static presets := []
+            static margin := 8
+            static __new() {
+                this.update_presets()
+            }
+            static update_presets(*) {
+                static monlist := sys.mon.list
+                loop monlist.length {
+                    _full := monlist[A_Index].Rectified
+                    _fullwm := vector4.rect(_full*).add(this.margin, this.margin, (-2) * this.margin, (-2) * this.margin)
+                    _top := vector4.Rect(_fullwm*).div(1,1,1,2)
+                    _bot := vector4.Rect(_top*).add(0, _top.h, 0, 0)
+                    _left := vector4.Rect(_fullwm*).div(1,1,2,1)
+                    _right := vector4.Rect(_left*).add(_left.w, 0, 0, 0)
+                    _lefttop := vector4.Rect(_left*).div(1,1,1,2)
+                    _leftbot := vector4.Rect(_lefttop*).add(0, _lefttop.h, 0, 0)
+                    _righttop := vector4.Rect(_right*).div(1,1,1,2)
+                    _rightbot := vector4.Rect(_righttop*).add(0, _righttop.h, 0, 0)
+                    this.presets.push { 
+                        full: _fullwm
+                      , bot: _bot
+                      , top: _top
+                      , left: _left
+                      , right: _right
+                      , lefttop: _lefttop
+                      , leftbot: _leftbot
+                      , righttop: _righttop
+                      , rightbot: _rightbot
+                    }
+                }
+            }
             animate_resize := true
             duration := 500,
             fps := 500,

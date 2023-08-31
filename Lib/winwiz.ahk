@@ -225,7 +225,7 @@ class winwiz {
     static searchv2docs(_searchterm:=false, _newwindow:=false, *) {
         wintitle := "AutoHotkey v2 Help ahk_exe hh.exe"
         if !winexist(wintitle) or _newwindow {
-            run '"C:\Program Files\AutoHotkey\v2.0.2\AutoHotkey.chm"',,, &_hhpid
+            run '"C:\Program Files\AutoHotkey\v2\AutoHotkey.chm"',,, &_hhpid
             _found := winwait("ahk_pid" _hhpid,, 5)
         } else _found := true
         if not _found

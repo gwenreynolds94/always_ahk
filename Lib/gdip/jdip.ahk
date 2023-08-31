@@ -20,6 +20,11 @@ class gdipui extends gui {
     _rect_ := vector4.Rect( A_ScreenWidth/2 - 800/2, A_ScreenHeight/2 - 600/2, 800, 600 )
     _bgcolor_ := ""
     _bradius_ := 0
+    gbm := 0x0
+    hdc := 0x0
+    hbm := 0x0
+    gfx := 0x0
+    drawqueue := funcarray()
 
     __new(   _options:="-Caption +ToolWindow +LastFound +OwnDialogs"
            , _title:=a_scriptname
@@ -30,6 +35,8 @@ class gdipui extends gui {
          ) {
 
         super.__new("+E0x80000 " _options, _title, _evtobj?)
+        this.MarginX := 0
+        this.MarginY := 0
 
         this._rect_.__numtype__ := "int"
         this._rect_.set(_rect ?? this._rect_)
@@ -40,46 +47,68 @@ class gdipui extends gui {
 
     coordstring => "x" this._rect_.x " y" this._rect_.y " w" this._rect_.w " h" this._rect_.h
 
+    rect => this._rect_
+
     _first_show_(*) {
         super.show("NA")
         this.drawbg
         this._is_init_ := true
     }
 
+    openctx(*) {
+        this.gbm := CreateDIBSection(this.rect.w, this.rect.h)
+        this.hdc := CreateCompatibleDC()
+        this.hbm := SelectObject(this.hdc, this.gbm)
+        this.gfx := Gdip_GraphicsFromHDC(this.hdc)
+        Gdip_SetSmoothingMode this.gfx, 2
+    }
+
+    closectx(*) {
+        SelectObject this.hdc, this.hbm
+        DeleteDC this.hdc
+    }
+
+    updatelayeredwindow =>
+        UpdateLayeredWindow.bind(this.hwnd, this.hdc, this._rect_.x, this._rect_.y, this._rect_.w, this._rect_.h)
+
     drawbg(_bgcolor?, *) {
         this._bgcolor_ := _bgcolor ?? this._bgcolor_
-        gbm := CreateDIBSection(this._rect_.w, this._rect_.h)
-        dctx := CreateCompatibleDC()
-        dcbm := SelectObject(dctx, gbm)
-        gfx := Gdip_GraphicsFromHDC(dctx)
-        Gdip_SetSmoothingMode gfx, 2
         gbrush := Gdip_BrushCreateSolid(integer("0xff" this._bgcolor_))
         if this._bradius_
-            Gdip_FillRoundedRectangle(gfx, gbrush, 0, 0, this._rect_.w, this._rect_.h, this._bradius_)
-        else Gdip_FillRectangle(gfx, gbrush, 0, 0, this._rect_.w, this._rect_.h)
+            Gdip_FillRoundedRectangle(this.gfx, gbrush, 0, 0, this._rect_.w, this._rect_.h, this._bradius_)
+        else Gdip_FillRectangle(this.gfx, gbrush, 0, 0, this._rect_.w, this._rect_.h)
         Gdip_DeleteBrush gbrush
-        UpdateLayeredWindow(this.hwnd, dctx, this._rect_.x, this._rect_.y, this._rect_.w, this._rect_.h)
-        SelectObject dctx, dcbm
-        DeleteDC dctx
     }
 
-    drawbitmap(_bitmap, *) {
+    drawbitmap(_bitmap, _x?, _y?, _w?, _h?, *) =>
+        Gdip_DrawImage(this.gfx, _bitmap, _x ?? 0, _y ?? 0, _w ?? this.rect.w, _h ?? this.rect.h)
 
+    drawrect(_argb, _rect, _bradius:=0, *) {
+        gbrush := Gdip_BrushCreateSolid(integer( "0x" _argb ))
+        if this._bradius_
+            Gdip_FillRoundedRectangle(this.gfx, gbrush, _rect.x, _rect.y, _rect.w, _rect.h, _bradius)
+        else Gdip_FillRectangle(this.gfx, gbrush, _rect.x, _rect.y, _rect.w, _rect.h)
+        Gdip_DeleteBrush gbrush
     }
 
-    drawrect(_color, _rect, *) {
+    clear(*) => Gdip_GraphicsClear(this.gfx)
 
-    }
-
-    show(*) {
-        if !this._is_init_
-            return this._first_show_()
-        super.show(this.coordstring)
+    show(_opts:="", _args*) {
+        ; if !this._is_init_
+        ;     return this._first_show_()
+        super.show(this.coordstring " " _opts, _args*)
     }
 }
 
-ggui := gdipui()
-ggui.show()
+/**
 
+ggui := gdipui()
+ggui.show("NA")
+ggui.openctx()
+ggui.drawbitmap(Gdip_BitmapFromHWND(winexist("ahk_exe wezterm-gui.exe")))
+(ggui.updatelayeredwindow)()
+ggui.closectx()
 
 ^#e::ExitApp
+
+*/

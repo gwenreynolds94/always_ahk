@@ -6,6 +6,7 @@
 #SingleInstance Force
 
 #Include builtins_extended.ahk
+#Include maths.ahk
 
 class sys {
     static bm := {
@@ -24,6 +25,21 @@ class sys {
         for _pcnm, _pc in this.defpcs
             if _pc.suffix = this.pcsuffix
                 this.pc := _pc.pc, this.pcfullname := _pc.fullname, this.pcalias := _pcnm
+    }
+    class mon {
+       static count := 0
+            , list := []
+        static __new() {
+            this.update()
+        }
+        static update() {
+            this.count := MonitorGetCount()
+            this.list.Capacity := 0
+            loop this.count {
+                if MonitorGet(A_Index, &_l, &_t, &_r, &_b)
+                    this.list.push Vector4.rect.Corners(_l, _t, _r, _b, "int")
+            }
+        }
     }
     class launch_env_vars {
         static sys_prop_adv_title := "System Properties"
@@ -73,3 +89,4 @@ class sys {
         }
     }
 }
+

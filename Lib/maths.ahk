@@ -243,7 +243,8 @@ class Vector4 extends Math.Vector {
             b := 0
             __propslist__ => ["l", "t", "r", "b"]
             __altpropslist__ => vector4.rect.prototype.__propslist__
-            __new(_l?, _t?, _r?, _b?) {
+            __new(_l?, _t?, _r?, _b?, _numtype:="float") {
+                this.__numtype__ := _numtype
                 Math.Vector.Prototype.__new.call(this, _l ?? 0, _t?, _r?, _b?)
                 for _propname in Vector4.Prototype.__propslist__
                     this.deleteprop _propname
