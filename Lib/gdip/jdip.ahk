@@ -80,7 +80,7 @@ class gdipui extends gui {
         Gdip_DeleteBrush gbrush
     }
 
-    drawbitmap(_bitmap, _x?, _y?, _w?, _h?, *) =>
+    drawimage(_bitmap, _x?, _y?, _w?, _h?, *) =>
         Gdip_DrawImage(this.gfx, _bitmap, _x ?? 0, _y ?? 0, _w ?? this.rect.w, _h ?? this.rect.h)
 
     drawrect(_argb, _rect, _bradius:=0, *) {
@@ -105,7 +105,7 @@ class gdipui extends gui {
 ggui := gdipui()
 ggui.show("NA")
 ggui.openctx()
-ggui.drawbitmap(Gdip_BitmapFromHWND(winexist("ahk_exe wezterm-gui.exe")))
+ggui.drawimage(Gdip_BitmapFromHWND(winexist("ahk_exe wezterm-gui.exe")))
 (ggui.updatelayeredwindow)()
 ggui.closectx()
 

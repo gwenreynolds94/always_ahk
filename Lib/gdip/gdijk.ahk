@@ -2645,6 +2645,68 @@ class GdipCache {
     static pToken := 0x0
 }
 
+class GdipBitmap {
+    class FromHwnd extends GdipBitmap {
+        __new(_wtitle) {
+            super.__new(Gdip_BitmapFromHWND(winexist(_wtitle)))
+        }
+    }
+    class FromScreen extends GdipBitmap {
+        __new(_screen:=0, _raster:="") {
+            super.__new(Gdip_BitmapFromScreen(_screen, _raster))
+        }
+    }
+    _bm_ := 0x0
+    __new(_bm?) {
+        this._bm_ := _bm ?? 0x0
+    }
+    __delete(*) {
+        this.release()
+    }
+    hasbm => !!this._bm_
+    setfromhwnd(_hwnd, *) {
+        this.set Gdip_BitmapFromHWND(_hwnd)
+    }
+    setfromscreen(_scr:=0, _raster:="") {
+        this.set Gdip_BitmapFromScreen(_scr, _raster)
+    }
+    draw(_gfx, _dx?, _dy?, _dw?, _dh?, _sx?, _sy?, _sw?, _sh?, _matrix:=1, *) {
+        if this.hasbm
+            Gdip_DrawImage(_gfx, this._bm_, _dx?, _dy?, _dw?, _dh?, _sx?, _sy?, _sw?, _sh?, _matrix)
+    }
+    crop(_x?, _y?, _w?, _h?, _format?, *) {
+        this.set Gdip_CloneBitmapArea(this._bm_, _x ?? 0, _y ?? 0, _w ?? this.w, _h ?? this.h, _format?)
+    }
+    containwidth(_w, *) {
+        tw := this.w, th := this.h
+        if _w < this.w {
+            asp := th / tw
+            nw := _w, nh := _w * asp
+            nbm := Gdip_CreateBitmap(nw, nh)
+            ngf := Gdip_GraphicsFromImage(nbm)
+            Gdip_SetSmoothingMode ngf, 4
+            Gdip_SetInterpolationMode ngf, 7
+            Gdip_DrawImage ngf, this._bm_, 0, 0, nw, nh
+            this.set(nbm)
+            Gdip_DeleteGraphics ngf
+        }
+    }
+    set(_bm) {
+        this.release()
+        this._bm_ := _bm
+    }
+    release(*) {
+        if this.hasbm
+            Gdip_DisposeImage(this._bm_)
+    }
+    w => Gdip_GetImageWidth(this._bm_)
+    h => Gdip_GetImageHeight(this._bm_)
+}
+
+class GdipBrush {
+
+}
+
 Gdip_Startup(_force:=false, *)
 {
     if !_force and (GdipCache.pToken != 0x0)

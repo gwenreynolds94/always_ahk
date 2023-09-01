@@ -390,3 +390,4 @@ class HotIfArray extends Array {
     }
 }
 
+global NUL := ""

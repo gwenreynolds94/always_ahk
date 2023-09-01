@@ -4,6 +4,7 @@
 #Warn All, StdOut
 #SingleInstance Force
 
+#Include <builtins_extended>
 #Include <winwiz>
 #Include <gdip\jdip>
 
@@ -13,9 +14,14 @@ class wintree {
         ,  preview := wintree._preview_()
         ,  width := 500
         ,  pscale := 0.4
-    static __new(_width:=500, _bgcolor:="1f2f30") {
+        ,  tbmargin := 16
+        ,  tbwidth := 200
+        ,  tbhlwidth := 4
+        ,  tbhlcolor := 'ffaaddff'
+    static __new(_tbwidth:=500, _bgcolor:="1f2f30") {
         this.sidebar._bgcolor_ := _bgcolor or this.bgcolor
-        this.sidebar.rect.set(0, 0, _width or this.width, A_ScreenHeight)
+        this.tbwidth := _tbwidth or this.tbwidth
+        this.sidebar.rect.set(0, 0, (_tbwidth or this.tbwidth) + (this.tbmargin * 2), A_ScreenHeight)
         this.preview.rect.set(this.sidebar.rect.w, 0, A_ScreenWidth * this.pscale, A_ScreenHeight * this.pscale)
     }
     static show() {
@@ -31,34 +37,33 @@ class wintree {
             super.__new(,"wintree.ahk.sidebar",,,, this)
         }
         updatelist(*) {
-            this.hwnds := wingetlist()
+            this.hwnds := winwiz.winlist
             this.windows.Capacity := 0
             prevrect := false
+            this.openctx
+            this.drawbg
             for _hwnd in this.hwnds {
-                _bm := Gdip_BitmapFromHWND(_hwnd)
-                _bmw := Gdip_GetImageWidth(_bm)
-                _bmh := Gdip_GetImageHeight(_bm)
-                _rect := !prevrect ? (prevrect:=vector4.Rect(10,10, _bmw * 0.1, _bmh * 0.1))
-                                   : (prevrect.add(0, prevrect.h + 10))
+                wbm := GdipBitmap.FromHwnd(_hwnd)
+                _rect := !prevrect ? (prevrect:=vector4.Rect(wintree.tbmargin,wintree.tbmargin, wbm.w * 0.1, wbm.h * 0.1))
+                                   : (prevrect.add(0, prevrect.h + wintree.tbmargin))
                 this.windows.push({
                     rect : vector4.Rect(_rect*)
                   , hwnd : _hwnd
-                  , bm   : _bm
+                  , bm   : wbm
                 })
-            }
-        }
-        drawlist(*) {
-            this.openctx
-            this.drawbg
-            loop 3 {
-                _win := this.windows[A_Index]
-                this.drawbitmap(_win.bm, _win.rect*)
+                this.drawimage(wbm._bm_, _rect*)
             }
             (this.updatelayeredwindow)()
             this.closectx
         }
         show(*) {
             super.show()
+        }
+        class thumbnail {
+            hwnd := 0x0
+            __new(_hwnd) {
+                this.hwnd := _hwnd
+            }
         }
     }
     class _preview_ extends gdipui {
@@ -73,7 +78,6 @@ class wintree {
 7::Reload
 9::{
     wintree.sidebar.updatelist
-    wintree.sidebar.drawlist
     wintree.show()
 }
 8::{
