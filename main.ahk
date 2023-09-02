@@ -22,6 +22,7 @@ setwindelay 0
 #Include <volctrl>
 #Include <aktions>
 #Include <sys>
+#Include <drink>
 
 
 exitaction(_exit_reason:="", *) {
@@ -35,7 +36,8 @@ Class __always_config extends conf_tool {
      * @prop {Map} config_defaults
      */
     static config_defaults := Map()
-
+    
+    bm := { updatedrinkinterval: objbindmethod(this, "updatedrinkinterval") }
     edit_enabled_gui := {}
 
     __New() {
@@ -44,10 +46,16 @@ Class __always_config extends conf_tool {
         this.edit_enabled_gui := conf_tool.section_edit(this, "Enabled", "bool")
         this.edit_ktblgen_gui := conf_tool.section_edit(this, "ktblgen", "bool")
         this.edit_ktblapp_gui := conf_tool.section_edit(this, "ktblapp", "bool")
-        this.edit_misc_gui := conf_tool.section_edit(this, "misc", "string")
+        this.edit_drink_gui := conf_tool.section_edit(this, "drink", "mix")
+        this.edit_misc_gui := conf_tool.section_edit(this, "misc", "mix")
+    }
+
+    updatedrinkinterval(*) {
+        drink.ui.updateinterval( this.drink.intervalminutes )
     }
 
     misc => this.ini.misc
+    drink => this.ini.drink
     enabled => this.ini.enabled
     ktblgen => this.ini.ktblgen
     ktblmisc => this.ini.ktblapp
@@ -59,6 +67,7 @@ __always_config.config_defaults := Map(
         "fuck_cortana"    , true ,
         "bcv2_on_startup" , true ,
         "pcnm_hotstrings" , true ,
+        "misc_hotkeys"    , true ,
     ),
     "ktblgen", Map(
         "leadercaps"       , true ,
@@ -73,8 +82,13 @@ __always_config.config_defaults := Map(
     "ktblapp", Map(
         "death_stranding" , true ,
         "dying_light"     , true ,
-        "kenshi"          , true ,
         "fallout"         , true ,
+        "kenshi"          , true ,
+    ),
+    "drink", Map(
+        "intervalminutes",   60 ,
+        "durationseconds",   30 ,
+        "show"           , true ,
     ),
     "misc", Map(
         "fuck_cortana_interval", 6666,
@@ -86,6 +100,11 @@ __always_config.config_defaults := Map(
  * Interface to get and set .ini style configurations in an .ahkonf file
  */
 __k := __always_config()
+__k.edit_drink_gui.updateactions["intervalminutes"] := __k.bm.updatedrinkinterval
+__k.edit_drink_gui.updateactions["durationseconds"] := (*)=>(drink.ui.maxdur := __k.drink.durationseconds)
+drink.ui.showifexpr := (*)=>(!!__k.drink.show)
+drink.ui.scale := 2.5
+drink.enable()
 
 
 class fuck_cortana {
@@ -199,6 +218,8 @@ class gen {
             !winactive("ahk_exe ds.exe")             and ;
             !winactive("ahk_exe FALLOUTW.exe")           )
 
+        kt.hotki "LWin & /", (*)=>winactivate(winwiz.winlist[""][2])
+
         kt.dblki("$XButton2", wintrans.tgui.inst.bmtoggle, 244, "{XButton2}")
         kt.hotki("XButton2 & LButton", winwiz.bm.loopwindows.bind(false, "", false, false))
         kt.hotki("XButton2 & RButton", winwiz.bm.loopwindows.bind(true, "", false, false))
@@ -240,6 +261,7 @@ class gen {
         kl.progki( [ "o", "f", "f" ], "firefox.exe"     )
         kl.progki( [ "o", "l", "s" ], "Logseq.exe"      )
         kl.progki( [ "o", "i", "t" ], "iTunes.exe"      )
+        kl.progki( [ "o", "s", "y", "n" ], "C:\Users\" A_UserName "\Portables\itch\appinstalls\synthona\synthona-1.2.8-windows.exe")
         kl.progki( [ "o", "p", "t", "o", "y" ], "C:\Program Files\PowerToys\PowerToys.exe" )
         kl.progki( [ "o", "f", "a", "l", "l" ]
                  , "`"Z:\SteamLibrary\steamapps\common\Fallout\Fallout Fixt\Play Fallout Fixt.lnk`"" )
@@ -289,6 +311,7 @@ class gen {
         ffkt.hotki( "XButton1 & XButton2", "{Ctrl Down}{PgUp}{Ctrl Up}" )
         ffkt.hotki( "XButton2 & XButton1", "{Ctrl Down}{PgDn}{Ctrl Up}" )
         ffkt.hotki "^!LButton", aktions.repeatpress("LButton", 50, 30).toggle
+        ffkt.hotki("<^>!Space", "{Ctrl Down}{Alt Down}{Space}{Alt Up}{Ctrl Up}")
 
         antiffkt := this.antiffkt
 
@@ -372,16 +395,17 @@ class gen {
         dbgkt := this.dbgkt
         dbgkt.hotifexpr := (*)=>( !!__k.ktblgen.debugtbl )
         dbgkt.hotki "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
-        dbgkt.hotki "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
         dbgkt.hotki "sc029 & q", (*)=>exitapp()
         dbgkt.hotki "sc029 & h", (*)=>ListHotkeys()
         dbgkt.hotki "sc029 & l", (*)=>ListLines()
         dbgkt.hotki "sc029 & v", (*)=>ListVars()
         dbgkt.hotki "sc029 & k", (*)=>KeyHistory()
         dbgkt.hotki "sc029 & s", (*)=>Suspend()
-        dbgkt.hotki "sc029 & F1", __k.edit_ktblgen_gui.bm.toggle
-        dbgkt.hotki "sc029 & F2", __k.edit_ktblapp_gui.bm.toggle
-        dbgkt.hotki "sc029 & F3", __k.edit_misc_gui.bm.toggle
+        dbgkt.pathki( ["sc029 & e", "e"] , __k.edit_enabled_gui.bm.toggle )
+        dbgkt.pathki( ["sc029 & e", "g"] , __k.edit_ktblgen_gui.bm.toggle )
+        dbgkt.pathki( ["sc029 & e", "a"] , __k.edit_ktblapp_gui.bm.toggle )
+        dbgkt.pathki( ["sc029 & e", "m"] , __k.edit_misc_gui.bm.toggle    )
+        dbgkt.pathki( ["sc029 & e", "d"] , __k.edit_drink_gui.bm.toggle   )
         dbgkt.hotki "$sc029", (*)=>(send("{sc029}"))
         dbgkt.hotki "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
 
@@ -550,23 +574,24 @@ class on_main_start {
         gen.dbgkl.enabled := true
         volctrl.wheel_enabled := true
 
-        hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
-        hotkey "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
-        hotkey "sc029 & q", (*)=>exitapp()
-        hotkey "sc029 & h", (*)=>ListHotkeys()
-        hotkey "sc029 & l", (*)=>ListLines()
-        hotkey "sc029 & v", (*)=>ListVars()
-        hotkey "sc029 & k", (*)=>KeyHistory()
-        hotkey "sc029 & s", (*)=>Suspend()
-        hotkey "sc029 & w", (*)=>(dbgln({__o__:1,nestlvlmax:7},wincache["A"]))
-        hotkey "sc029 & F1", quiktool.call.bind(
-                quiktool, A_Clipboard:=A_ComputerName, { x:A_ScreenWidth - 50
-                                                     ,   y:A_ScreenHeight - 25 }, 6666 )
-        hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
-        hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
-        hotkey "sc029 & 3", __k.edit_misc_gui.bm.toggle
-        hotkey "$sc029", (*)=>(send("{sc029}"))
-        hotkey "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
+;;;;        hotkey "sc029 & r", (*)=>(keywait("sc029", "T2"), reload())
+;;;;        hotkey "sc029 & e", (*)=>__k.edit_enabled_gui.bm.toggle()
+;;;;        hotkey "sc029 & q", (*)=>exitapp()
+;;;;        hotkey "sc029 & h", (*)=>ListHotkeys()
+;;;;        hotkey "sc029 & l", (*)=>ListLines()
+;;;;        hotkey "sc029 & v", (*)=>ListVars()
+;;;;        hotkey "sc029 & k", (*)=>KeyHistory()
+;;;;        hotkey "sc029 & s", (*)=>Suspend()
+;;;;        hotkey "sc029 & w", (*)=>(dbgln({__o__:1,nestlvlmax:7},wincache["A"]))
+;;;;        hotkey "sc029 & F1", quiktool.call.bind(
+;;;;                quiktool, A_Clipboard:=A_ComputerName, { x:A_ScreenWidth - 50
+;;;;                                                     ,   y:A_ScreenHeight - 25 }, 6666 )
+;;;;        hotkey "sc029 & 1", __k.edit_ktblgen_gui.bm.toggle
+;;;;        hotkey "sc029 & 2", __k.edit_ktblapp_gui.bm.toggle
+;;;;        hotkey "sc029 & 3", __k.edit_misc_gui.bm.toggle
+;;;;        hotkey "$sc029", (*)=>(send("{sc029}"))
+;;;;        hotkey "$+sc029", (*)=>(send("{Shift Down}{sc029}{Shift Up}"))
+
         if !!__k.enabled.bcv2_on_startup
             this.start_bcv2
     }
@@ -584,4 +609,9 @@ hotstring ":*?:cmppr", (*)=>send(sys.defpcs["primary"].fullname)
 hotstring ":*?:cmpop", (*)=>send(sys.defpcs["optiplex"].fullname)
 hotstring ":*?:cmplp", (*)=>send(sys.defpcs["laptop"].fullname)
 hotif
+
+#hotif (*)=>!!__k.enabled.misc_hotkeys
+LWin & '::AltTab
+LWin & `;::ShiftAltTab
+#hotif
 

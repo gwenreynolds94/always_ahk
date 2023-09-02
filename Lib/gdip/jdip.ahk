@@ -68,8 +68,8 @@ class gdipui extends gui {
         DeleteDC this.hdc
     }
 
-    updatelayeredwindow =>
-        UpdateLayeredWindow.bind(this.hwnd, this.hdc, this._rect_.x, this._rect_.y, this._rect_.w, this._rect_.h)
+    updatelayeredwindow(*)=>
+        UpdateLayeredWindow(this.hwnd, this.hdc, this._rect_.x, this._rect_.y, this._rect_.w, this._rect_.h)
 
     drawbg(_bgcolor?, *) {
         this._bgcolor_ := _bgcolor ?? this._bgcolor_
@@ -89,6 +89,10 @@ class gdipui extends gui {
             Gdip_FillRoundedRectangle(this.gfx, gbrush, _rect.x, _rect.y, _rect.w, _rect.h, _bradius)
         else Gdip_FillRectangle(this.gfx, gbrush, _rect.x, _rect.y, _rect.w, _rect.h)
         Gdip_DeleteBrush gbrush
+    }
+
+    drawtext(_text, _opts, _width, _height, _font:="Consolas", _measure:=0) {
+        Gdip_TextToGraphics(this.gfx, _text, _opts, _font, _width, _height, _measure)
     }
 
     clear(*) => Gdip_GraphicsClear(this.gfx)

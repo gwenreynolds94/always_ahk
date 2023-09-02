@@ -113,8 +113,12 @@ Class conf_tool {
                 if not has_section
                     iniwrite("", this.fpath, _sectname)
                 Loop Parse, IniRead(this.fpath, _sectname), "`n", "`r" {
-                    RegExMatch A_LoopField, "([^=]+)=(.+)", &_re_match
+                    _re_found := RegExMatch(A_LoopField, "([^=]+)=(.+)?", &_re_match)
+                    if not !_re_found
+                        continue
                     section_keys.Push _re_match.1
+                    if _re_match.Count < 2
+                        iniwrite(false, this.fpath, _sectname, _re_match.1)
                 }
                 for _keyname, _keyvalue in _sectmeat
                     if not section_keys.IndexOf(_keyname)
@@ -227,15 +231,22 @@ Class conf_tool {
         bm := {
             show: objbindmethod(this, "show"),
             hide: objbindmethod(this, "hide"),
-            toggle: objbindmethod(this, "toggle")
+            toggle: objbindmethod(this, "toggle"),
+            isactive: objbindmethod(this, "isactive"),
+            textedit_on_submit: objbindmethod(this, "textedit_on_submit"),
+            textedit_on_enter: objbindmethod(this, "textedit_on_enter")
         }
         _hidden_ := true
-
+        /**
+         * @prop {Map} updateactions
+         */
+        updateactions := Map()
+        editfocuscache := Map()
+        editsubmitcache := map()
         /**
          * @param {ConfTool} _conftool instance of ConfTool to edit
          * @param {String} _section section in configuration file to edit
          * @param {"bool"|"string"} _value_type types of values in section 
-         *  [STRING NOT IMPLEMENTED]
          */
         __New(_conftool, _section, _value_type:="bool") {
             this._conftool := _conftool
@@ -246,25 +257,38 @@ Class conf_tool {
             this.setup_gui()
         }
 
+        isactive(*) => !!winactive(this._gui)
+
         /**
          *
          */
         setup_gui() {
+            hasbools := this._value_type ~= "bool"
+            hasprimitives := this._value_type ~= "str|mix|num"
             this._gui := Gui("+AlwaysOnTop", "Edit" this._section "Gui", this)
+            this._gui.OnEvent("Close", "hide")
             this.update_content()
             ctrlopts := "xp+0 y+10 w" this._item_width
+            hotif this.bm.isactive ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ;
+                hotkey "Escape", this.bm.hide
+                if hasbools
+                    hotkey "Enter", this.bm.hide
+                else if hasprimitives
+                    hotkey "Enter", this.bm.textedit_on_enter
+            hotif ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ;
             for _key, _value in this._content {
-                if this._value_type ~= "bool" {
+                if hasbools {
                     this._guictrls[_key] :=
                         this._gui.AddCheckbox(ctrlopts, _key)
                     this._guictrls[_key].Value := _value
                     this._guictrls[_key].OnEvent("Click", "checkbox_on_click")
                 }
-                else if this._value_type ~= "str|mix|num" {
+                else if hasprimitives {
                     this._guictrls[_key "title"] := this._gui.AddText("v" _key "_text " ctrlopts, _key)
                     this._guictrls[_key "title"].SetFont(,"FiraCode Nerd Font Mono")
                     this._guictrls[_key] := this._gui.AddEdit("v" _key " " ctrlopts, _value)
                     this._guictrls[_key].OnEvent("Change", "textedit_on_change")
+                    this._guictrls[_key].OnEvent("Focus", "textedit_on_focus")
                 }
             }
 
@@ -287,6 +311,7 @@ Class conf_tool {
             Loop Parse, IniRead(this._conftool.fpath, this._section), "`n", "`r" {
                 RegExMatch A_LoopField, "([^=]+)=(.+)", &_re_match
                 this._content[_re_match.1] := _re_match.2
+                this.updateactions[_re_match.1] := false
             }
         }
 
@@ -305,15 +330,23 @@ Class conf_tool {
         }
 
         textedit_on_change(_guictrl, *) {
-            static starttick := 0,
-                   prevtick := 0,
-                   newtick := 0
-            newtick := A_TickCount
-            if (newtick - prevtick) < 200
-                return
+            settimer(this.editsubmitcache[_guictrl.name], (-500))
+        }
+        textedit_on_submit(_guictrl, *) {
             this._gui.Submit(false)
-            this._conftool.ini.%this._section%.%_guictrl.Name% := _guictrl.Value
-            prevtick := newtick
+            this._conftool.ini.%this._section%.%_guictrl.Name% := _guictrl.Value or false
+            if !!this.updateactions[_guictrl.name]
+                (this.updateactions[_guictrl.name])()
+        }
+        textedit_on_focus(_guictrl, *) {
+            this.editfocuscache[_guictrl.name] := _guictrl.value or false
+            if !this.editsubmitcache.has(_guictrl.name)
+                this.editsubmitcache[_guictrl.name] := objbindmethod(this, "textedit_on_submit", _guictrl)
+        }
+        textedit_on_enter(*) {
+            _guictrl := this._gui.FocusedCtrl
+            this.textedit_on_submit(_guictrl)
+            this.hide()
         }
 
         show(*) {
