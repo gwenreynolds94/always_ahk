@@ -8,6 +8,7 @@
 #include <consts\wmconsts>
 
 
+
 class drink {
     static ui := drinkui()
     static disable(*) => this.ui.disable()
